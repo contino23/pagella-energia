@@ -1,10 +1,9 @@
 # Verifica una tantum: il Portale Offerte accetta download dai server di GitHub?
 name: Prova download Portale Offerte
 
+# Esito del 3/11/2026: 403 su tutte le richieste (il Portale blocca i datacenter).
 on:
   workflow_dispatch:
-  push:
-    paths: [".github/workflows/prova-download.yml"]
 
 permissions:
   contents: read

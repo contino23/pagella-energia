@@ -167,7 +167,7 @@ function componenti(o: Nodo, commodity: Commodity, cod: string, anomalie: Anomal
       // Le regole del Portale riconoscono lo spread dal nome esatto "SPREAD";
       // i venditori lo scrivono in molti modi, quindi confrontiamo senza maiuscole.
       isSpread: r === "energia" && /^spread\b/i.test(nome),
-      opzionale: s(ci.TIPOLOGIA) === "02",
+      tipologia: s(ci.TIPOLOGIA),
       prezzi: prezzi(ci, commodity, cod, anomalie, monoraria),
     };
   });
@@ -214,6 +214,8 @@ function sconti(o: Nodo): Sconto[] {
     };
     if (condTesto) r.condizioneTesto = condTesto;
     if (durata !== undefined) r.durataMesi = durata;
+    const mese = numero(pv.MESE_VALIDITA);
+    if (mese !== undefined) r.meseValidita = mese;
     return r;
   });
 }

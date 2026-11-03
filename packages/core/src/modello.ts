@@ -35,7 +35,8 @@ export interface Componente {
   ruolo: RuoloComponente;
   /** true se è lo SPREAD sommato all'indice, secondo le regole del Portale. */
   isSpread: boolean;
-  opzionale: boolean;
+  /** Codice TIPOLOGIA del tracciato (01/02): significato non documentato, non usato nel calcolo. */
+  tipologia: string;
   prezzi: Prezzo[];
 }
 
@@ -55,8 +56,11 @@ export interface Sconto {
   condizioneTesto?: string;
   /** Lo sconto si applica prima dell'IVA. */
   primaIva: boolean;
+  /** validoDa/validoFino: scaglione di consumo annuo (kWh o Smc) a cui si applica l'importo. */
   importi: Array<{ tipo: TipoSconto; valore: number; unita: Unita; validoDa?: number; validoFino?: number }>;
   durataMesi?: number;
+  /** Mese (1–12) dall'attivazione in cui vale lo sconto, se limitato a un solo mese. */
+  meseValidita?: number;
 }
 
 export interface Dispacciamento {
