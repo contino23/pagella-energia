@@ -84,3 +84,19 @@ describe("utilità", () => {
     expect(scartate).toHaveLength(1);
   });
 });
+
+import { leggiIndiciCsv } from "../src/leggi-indici.js";
+describe("indici", () => {
+  it("legge il CSV storico con virgola decimale e celle vuote", () => {
+    const csv = "AnnoMese;PUN (€/kWh);PSV (€/Smc);Pfor (€/Smc)\n202609;0,207542;0,844939;\n202001;0,04747;0,14231;0,17855\n";
+    const r = leggiIndiciCsv(csv);
+    expect(r[0]).toEqual({ mese: "2020-01", indici: { PUN: 0.04747, PSV: 0.14231, PFOR: 0.17855 } });
+    expect(r[1]).toEqual({ mese: "2026-09", indici: { PUN: 0.207542, PSV: 0.844939 } });
+  });
+  it("legge il file reale", async () => {
+    const { readFileSync } = await import("node:fs");
+    const r = leggiIndiciCsv(readFileSync(new URL("../../data/indici/prezzi-storici-indici.csv", import.meta.url), "utf8"));
+    expect(r.length).toBeGreaterThan(80);
+    expect(Object.keys(r.at(-1)!.indici)).toEqual(expect.arrayContaining(["PUN", "PSV", "PE", "CMEM", "PSBIL"]));
+  });
+});
