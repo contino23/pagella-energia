@@ -1,0 +1,20 @@
+{
+  "name": "pagella-energia",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Pagella Energia: confronto neutrale delle offerte luce e gas sui dati aperti del Portale Offerte ARERA",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "pipeline"
+  ],
+  "scripts": {
+    "leggi": "npm run leggi --workspace pipeline --",
+    "test": "npm test --workspace pipeline",
+    "typecheck": "tsc -p packages/core && tsc -p pipeline"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "AGPL-3.0-or-later"
+}

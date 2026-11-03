@@ -1,0 +1,20 @@
+{
+  "data": "2026-11-03",
+  "offertePerFile": {
+    "PO_Offerte_D_MLIBERO_20261103.xml": 39,
+    "PO_Offerte_E_MLIBERO_20261103.xml": 3549,
+    "PO_Offerte_G_MLIBERO_20261103.xml": 2728
+  },
+  "anomaliePerTipo": {
+    "ComponenteImpresa: nessuna componente di prezzo": 1
+  },
+  "esempi": [
+    {
+      "codiceOfferta": "036052ESVFL01XXPEEBUSINESSCAF112",
+      "campo": "ComponenteImpresa",
+      "valore": "",
+      "messaggio": "nessuna componente di prezzo"
+    }
+  ],
+  "avvisi": []
+}
