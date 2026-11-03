@@ -4,7 +4,8 @@
  * Segue le "Regole per il calcolo della Spesa" v3.02 di Acquirente Unico (§3.1.4–3.1.6 e §3.3),
  * con queste differenze dichiarate:
  *  - Variabili: il Portale usa le quotazioni forward dei 4 trimestri successivi, che non sono
- *    negli open data. Usiamo la media degli ultimi 12 mesi dell'indice (e lo dichiariamo).
+ *    negli open data. Usiamo lo scenario passato dal chiamante (di norma media degli ultimi
+ *    3 mesi, con forchetta min/max 12 mesi: vedi scenari.ts) e lo dichiariamo.
  *  - L'indice è un valore unico per tutte le fasce (gli open data storici sono monorari).
  *  - Dispacciamento: il tracciato attuale ha codici (09–14) successivi al documento v3.02;
  *    li mappiamo sui parametri regolati corrispondenti.

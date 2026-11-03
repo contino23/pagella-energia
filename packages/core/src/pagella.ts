@@ -108,7 +108,14 @@ export function votoTrasparenza(o: Offerta, stima: StimaSpesa): VocePagella {
   return { voce: "trasparenza", voto: arrot(clamp(v)), peso: PESI.trasparenza, motivi };
 }
 
-export function creaPagella(o: Offerta, stima: StimaSpesa, spesaConfrontabili: number[], venditore?: MetricheVenditore): Pagella {
+export function creaPagella(
+  o: Offerta,
+  stima: StimaSpesa,
+  spesaConfrontabili: number[],
+  venditore?: MetricheVenditore,
+  /** Spesa con indice al minimo e al massimo degli ultimi 12 mesi (solo variabili). */
+  forchettaSpesa?: { minimo: number; massimo: number },
+): Pagella {
   const voci: VocePagella[] = [
     votoPrezzo(stima.totale, spesaConfrontabili),
     votoVincoli(o),
@@ -122,7 +129,11 @@ export function creaPagella(o: Offerta, stima: StimaSpesa, spesaConfrontabili: n
   const voto = arrot(voci.reduce((s, x) => s + (x.voto ?? 0) * x.peso, 0));
 
   const note: string[] = [];
-  if (o.prezzo === "variabile") note.push(`Prezzo variabile${o.indice ? ` legato a ${o.indice.etichetta}` : ""}: la spesa reale seguirà il mercato`);
+  if (o.prezzo === "variabile") {
+    note.push(`Prezzo variabile${o.indice ? ` legato a ${o.indice.etichetta}` : ""}: la spesa reale seguirà il mercato`);
+    if (forchettaSpesa && forchettaSpesa.massimo - forchettaSpesa.minimo >= 1)
+      note.push(`Negli ultimi 12 mesi questa offerta sarebbe costata tra ${euro(forchettaSpesa.minimo)} e ${euro(forchettaSpesa.massimo)} l'anno`);
+  }
   if (o.prezzo === "fisso" && o.durataMesi) note.push(`Prezzo bloccato per ${o.durataMesi} mesi`);
   if (stima.totaleConScontiCondizionati < stima.totale - 1)
     note.push(`Con bolletta online o domiciliazione scende a ${euro(stima.totaleConScontiCondizionati)}`);

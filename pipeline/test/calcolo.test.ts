@@ -67,3 +67,21 @@ describe("stima spesa luce domestica", () => {
     expect(scenarioMedia12Mesi(storico).valori.PUN).toBeCloseTo(0.1, 10);
   });
 });
+
+import { creaScenari, forchetta } from "@pagella/core";
+describe("scenari", () => {
+  const storico = Array.from({ length: 14 }, (_, i) => ({ mese: `2025-${String((i % 12) + 1).padStart(2, "0")}`.replace(/^2025-(0[1-2])$/, (m) => (i >= 12 ? m.replace("2025", "2026") : m)), indici: { PUN: 0.1 + i * 0.01 } }));
+  it("centrale = media ultimi 3 mesi, forchetta = min/max ultimi 12", () => {
+    const s = creaScenari(storico);
+    expect(s.centrale.valori.PUN).toBeCloseTo((0.21 + 0.22 + 0.23) / 3, 10);
+    expect(s.basso.valori.PUN).toBeCloseTo(0.12, 10);
+    expect(s.alto.valori.PUN).toBeCloseTo(0.23, 10);
+    expect(s.centrale.descrizione).toBe("Media dicembre 2025 – febbraio 2026");
+  });
+  it("forchetta di un'offerta fissa: tre valori uguali", () => {
+    const s = creaScenari(storico);
+    const f = forchetta((sc) => stimaSpesaLuce(beeFlat, famiglia, parametri, sc), s);
+    expect(f.minimo).toBe(f.centrale.totale);
+    expect(f.massimo).toBe(f.centrale.totale);
+  });
+});

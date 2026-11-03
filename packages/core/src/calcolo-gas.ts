@@ -2,8 +2,9 @@
  * Stima della spesa annua per un'offerta gas del mercato libero, cliente domestico.
  *
  * Segue le "Regole per il calcolo della Spesa" v3.02 (cap. 4.1.2–4.1.4 e 4.3), con queste scelte dichiarate:
- *  - Variabili: indice mensile degli ultimi 12 mesi, pesato sul profilo di prelievo mensile
- *    (il Portale usa valori elaborati da AU non pubblicati negli open data).
+ *  - Variabili: valore dell'indice dello scenario scelto (di norma media degli ultimi 3 mesi, vedi scenari.ts).
+ *    Se lo scenario fornisce valori mensili, vengono pesati sul profilo di prelievo mensile.
+ *    Il Portale usa valori elaborati da AU non pubblicati negli open data.
  *  - Distribuzione (τ3), UG2, accise e addizionale regionale sono applicati per scaglioni progressivi,
  *    come avviene in bolletta (il documento AU usa la sola fascia del consumo totale).
  *  - IVA: 10% sulla quota corrispondente ai primi 480 Smc, 22% sul resto (ripartizione proporzionale).
