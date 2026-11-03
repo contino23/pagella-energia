@@ -1,0 +1,16 @@
+import { readFileSync } from "node:fs";
+import { gunzipSync } from "node:zlib";
+import { scenarioMedia12Mesi, scenarioMensile12Mesi, stimaSpesaGas, type Fotografia } from "@pagella/core";
+import { leggiIndiciCsv } from "./leggi-indici.js";
+const [, , fotoPath, indiciPath] = process.argv;
+const foto = JSON.parse(gunzipSync(readFileSync(fotoPath!)).toString()) as Fotografia;
+const storico = leggiIndiciCsv(readFileSync(indiciPath!, "utf8"));
+const scenario = { ...scenarioMedia12Mesi(storico), mensili: scenarioMensile12Mesi(storico) };
+const profilo = { consumoAnnuoSmc: 1000, regione: "09", zonaClimatica: "D" as const };
+const offerte = foto.offerte.filter((o) => o.commodity === "gas" && o.cliente === "domestico");
+const ok = offerte.map((o) => ({ o, s: stimaSpesaGas(o, profilo, foto.parametri.gas, scenario) })).filter((x) => x.s.calcolabile).sort((a, b) => a.s.totale - b.s.totale);
+const t = ok.map((x) => x.s.totale); const p = (q: number) => t[Math.floor((t.length - 1) * q)];
+console.log(`offerte ${offerte.length}, calcolabili ${ok.length}; 1000 Smc Toscana: min ${p(0)} p10 ${p(0.1)} med ${p(0.5)} p90 ${p(0.9)} max ${p(1)}`);
+const avv: Record<string, number> = {}; for (const x of offerte.map((o) => stimaSpesaGas(o, profilo, foto.parametri.gas, scenario))) for (const a of x.avvisi) avv[a.replace(/"[^"]*"/, "…")] = (avv[a.replace(/"[^"]*"/, "…")] ?? 0) + 1;
+console.log(avv);
+for (const x of [...ok.slice(0, 4), ...ok.slice(-3)]) console.log(x.s.totale, x.o.prezzo, x.o.nome, "|", x.s.prezzoMedioEnergiaKwh, JSON.stringify(x.s.voci.map((v) => v.importo)));

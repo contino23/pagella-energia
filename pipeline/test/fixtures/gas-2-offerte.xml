@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ListaOfferteMercatoLibero xmlns="http://www.acquirenteunico.it/schemas/SII_AU/OffertaRetail/01">
+<offerta>
+        <IdentificativiOfferta>
+            <PIVA_UTENTE>09515990969</PIVA_UTENTE>
+            <COD_OFFERTA>025767GSVML01XXXXXGASDOMFWEB1126</COD_OFFERTA>
+        </IdentificativiOfferta>
+        <DettaglioOfferta>
+            <TIPO_MERCATO>02</TIPO_MERCATO>
+            <OFFERTA_SINGOLA>SI</OFFERTA_SINGOLA>
+            <TIPO_CLIENTE>01</TIPO_CLIENTE>
+            <TIPO_OFFERTA>01</TIPO_OFFERTA>
+            <TIPOLOGIA_ATT_CONTR>99</TIPOLOGIA_ATT_CONTR>
+            <NOME_OFFERTA>MOVE GAS FISSA WEB BLACK</NOME_OFFERTA>
+            <DESCRIZIONE>offerta domestica gas fissa</DESCRIZIONE>
+            <DURATA>12</DURATA>
+            <GARANZIE>Qualora venga disattivata la modalità di addebito bancario diretto sul conto corrente, a garanzia degli obblighi assunti il Cliente è tenuto a versare un deposito cauzionale pari a: 30,00 € fino a 500 Smc/anno; 90,00 € da 501 Smc/anno e fino a 1.500 Smc/anno; 150,00 € da 1.501 Smc/anno e fino a 2.500 Smc/anno; 300,00 € da 2.501 Smc/anno e fino a 5.000 Smc/anno; 1 mensilità di consumo medio annuo; superiore a 5.000 Smc/anno; Il versamento di tale importo verrà addebitato nella prima bolletta successiva alla stipula del contratto. La presente Garanzia avrà validità fino a quando sarà in essere il “Contratto” tra “Venditore” e “Cliente”.</GARANZIE>
+            <ModalitaAttivazione>
+                <MODALITA>01</MODALITA>
+            </ModalitaAttivazione>
+            <Contatti>
+                <TELEFONO>0497896840</TELEFONO>
+                <URL_SITO_VENDITORE>www.argos.company</URL_SITO_VENDITORE>
+                <URL_OFFERTA>https://www.argos.company/offerta-gas-fissa/</URL_OFFERTA>
+            </Contatti>
+        </DettaglioOfferta>
+        <ValiditaOfferta>
+            <DATA_INIZIO>29/10/2026_00:00:00</DATA_INIZIO>
+            <DATA_FINE>11/12/2026_23:59:59</DATA_FINE>
+        </ValiditaOfferta>
+        <MetodoPagamento>
+            <MODALITA_PAGAMENTO>03</MODALITA_PAGAMENTO>
+        </MetodoPagamento>
+        <MetodoPagamento>
+            <MODALITA_PAGAMENTO>01</MODALITA_PAGAMENTO>
+        </MetodoPagamento>
+        <MetodoPagamento>
+            <MODALITA_PAGAMENTO>02</MODALITA_PAGAMENTO>
+        </MetodoPagamento>
+        <MetodoPagamento>
+            <MODALITA_PAGAMENTO>99</MODALITA_PAGAMENTO>
+            <DESCRIZIONE>Bonifico</DESCRIZIONE>
+        </MetodoPagamento>
+        <ComponenteImpresa>
+            <NOME>corrispettivo di commercializzazione argos</NOME>
+            <DESCRIZIONE>corrispettivo di commercializzazione argos</DESCRIZIONE>
+            <TIPOLOGIA>01</TIPOLOGIA>
+            <MACROAREA>01</MACROAREA>
+            <IntervalloPrezzi>
+                <PREZZO>144</PREZZO>
+                <UNITA_MISURA>01</UNITA_MISURA>
+            </IntervalloPrezzi>
+        </ComponenteImpresa>
+        <ComponenteImpresa>
+            <NOME>Prezzo Energia</NOME>
+            <DESCRIZIONE>Prezzo Energia</DESCRIZIONE>
+            <TIPOLOGIA>01</TIPOLOGIA>
+            <MACROAREA>04</MACROAREA>
+            <IntervalloPrezzi>
+                <PREZZO>1.5</PREZZO>
+                <UNITA_MISURA>04</UNITA_MISURA>
+            </IntervalloPrezzi>
+        </ComponenteImpresa>
+        <CondizioniContrattuali>
+            <TIPOLOGIA_CONDIZIONE>01</TIPOLOGIA_CONDIZIONE>
+            <DESCRIZIONE>L'attivazione della fornitura è condizionata all’esito positivo delle verifiche sull’assenza di precedenti morosità e alla valutazione sull’affidabilità creditizia del Cliente.</DESCRIZIONE>
+            <LIMITANTE>01</LIMITANTE>
+        </CondizioniContrattuali>
+        <Sconto>
+            <NOME>Bonus 4,17</NOME>
+            <DESCRIZIONE>nel caso in cui il Cliente sottoscriva la presente offerta avrà diritto mensilmente, a partire dalla seconda bolletta utile emessa e per ogni punto di riconsegna attivo servito da ARGOS, ad un Bonus del valore di 4,17 €/mese + IVA, ferma restando la facoltà di variazione unilaterale del contratto così come prevista dalle CGF. L'erogazione del “Bonus 4,17” è comunque subordinata al fatto che, al termine di ogni mese di fornitura attiva, il Cliente risulti associato ad una valida modalità di pagamento tramite addebito diretto SEPA e non risultino una o più bollette non pagate da parte del Cliente. pari a 4,17 €Mese  </DESCRIZIONE>
+            <VALIDITA>02</VALIDITA>
+            <IVA_SCONTO>01</IVA_SCONTO>
+            <Condizione>
+                <CONDIZIONE_APPLICAZIONE>99</CONDIZIONE_APPLICAZIONE>
+                <DESCRIZIONE_CONDIZIONE>Pagamenti Regolari</DESCRIZIONE_CONDIZIONE>
+            </Condizione>
+            <PrezziSconto>
+                <TIPOLOGIA>01</TIPOLOGIA>
+                <UNITA_MISURA>01</UNITA_MISURA>
+                <PREZZO>45.87</PREZZO>
+            </PrezziSconto>
+        </Sconto>
+    </offerta>
+<offerta>
+        <IdentificativiOfferta>
+            <PIVA_UTENTE>02989180126</PIVA_UTENTE>
+            <COD_OFFERTA>007970GSVML01XX00000000GASDECAV2</COD_OFFERTA>
+        </IdentificativiOfferta>
+        <DettaglioOfferta>
+            <TIPO_MERCATO>02</TIPO_MERCATO>
+            <OFFERTA_SINGOLA>SI</OFFERTA_SINGOLA>
+            <TIPO_CLIENTE>01</TIPO_CLIENTE>
+            <TIPO_OFFERTA>02</TIPO_OFFERTA>
+            <TIPOLOGIA_ATT_CONTR>01</TIPOLOGIA_ATT_CONTR>
+            <NOME_OFFERTA>DECA</NOME_OFFERTA>
+            <DESCRIZIONE>Offerta a prezzo variabile: il prezzo varia seguendo l’andamento del PSV.</DESCRIZIONE>
+            <DURATA>24</DURATA>
+            <GARANZIE>NO</GARANZIE>
+            <ModalitaAttivazione>
+                <MODALITA>01</MODALITA>
+            </ModalitaAttivazione>
+            <Contatti>
+                <TELEFONO>0331354554</TELEFONO>
+                <URL_SITO_VENDITORE>www.erreci.info</URL_SITO_VENDITORE>
+                <URL_OFFERTA>https://domus.erreci.info/</URL_OFFERTA>
+            </Contatti>
+        </DettaglioOfferta>
+        <RiferimentiPrezzoEnergia>
+            <IDX_PREZZO_ENERGIA>14</IDX_PREZZO_ENERGIA>
+        </RiferimentiPrezzoEnergia>
+        <ValiditaOfferta>
+            <DATA_INIZIO>19/09/2026_00:00:00</DATA_INIZIO>
+            <DATA_FINE>30/11/2026_23:59:59</DATA_FINE>
+        </ValiditaOfferta>
+        <MetodoPagamento>
+            <MODALITA_PAGAMENTO>02</MODALITA_PAGAMENTO>
+        </MetodoPagamento>
+        <MetodoPagamento>
+            <MODALITA_PAGAMENTO>01</MODALITA_PAGAMENTO>
+        </MetodoPagamento>
+        <ComponenteImpresa>
+            <NOME>Spread Gas</NOME>
+            <DESCRIZIONE>Spread Gas</DESCRIZIONE>
+            <TIPOLOGIA>01</TIPOLOGIA>
+            <MACROAREA>04</MACROAREA>
+            <IntervalloPrezzi>
+                <PREZZO>0</PREZZO>
+                <UNITA_MISURA>04</UNITA_MISURA>
+            </IntervalloPrezzi>
+        </ComponenteImpresa>
+        <ComponenteImpresa>
+            <NOME>Corrispettivo commercializzazione mercato libero CML</NOME>
+            <DESCRIZIONE>Corrispettivo commercializzazione mercato libero CML</DESCRIZIONE>
+            <TIPOLOGIA>01</TIPOLOGIA>
+            <MACROAREA>01</MACROAREA>
+            <IntervalloPrezzi>
+                <PREZZO>60</PREZZO>
+                <UNITA_MISURA>01</UNITA_MISURA>
+            </IntervalloPrezzi>
+        </ComponenteImpresa>
+        <CondizioniContrattuali>
+            <TIPOLOGIA_CONDIZIONE>01</TIPOLOGIA_CONDIZIONE>
+            <DESCRIZIONE>La fornitura è in ogni caso condizionata all’esito positivo della verifica sull’assenza di precedenti morosità nei confronti del Fornitore e all’esito positivo delle valutazioni sull’affidabilità creditizia del Cliente (credit check). L’attività di credit check verrà effettuata, ad esempio, per riscontrare la presenza: di protesti, pregiudizievoli, anche attraverso banche dati dei punti di prelievo, morosità relative a diversi contratti intestati allo stesso Cliente, stipulati anche con terzi. In caso di esito negativo, il Fornitore ne darà comunicazione al Cliente, altrimenti le condizioni sospensive di cui sopra si intenderanno verificate positivamente. Il Fornitore svolgerà le attività di credit check entro 60 giorni dalla data di conclusione del contratto</DESCRIZIONE>
+            <LIMITANTE>01</LIMITANTE>
+        </CondizioniContrattuali>
+    </offerta>
+</ListaOfferteMercatoLibero>

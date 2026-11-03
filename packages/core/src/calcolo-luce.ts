@@ -82,7 +82,7 @@ function consumoFascia(fascia: string | undefined, c: { F1: number; F2: number; 
  * - scaglioni di consumo: quello che contiene il consumo annuo;
  * - validità temporale (prime N mesi): media pesata con il prezzo di default.
  */
-function prezzoEffettivo(prezzi: Prezzo[], consumoAnnuo: number): Prezzo | undefined {
+export function prezzoEffettivo(prezzi: Prezzo[], consumoAnnuo: number): Prezzo | undefined {
   if (prezzi.length === 0) return undefined;
   const base = prezzi.find((p) => p.consumoDa === undefined && p.consumoA === undefined && p.durataMesi === undefined && p.validoFinoMese === undefined) ?? prezzi[0]!;
   const scaglione = prezzi.find((p) => (p.consumoDa !== undefined || p.consumoA !== undefined) &&
