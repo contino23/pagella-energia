@@ -1,0 +1,33 @@
+# Verifica una tantum: il Portale Offerte accetta download dai server di GitHub?
+name: Prova download Portale Offerte
+
+on:
+  workflow_dispatch:
+  push:
+    paths: [".github/workflows/prova-download.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  prova:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Scarica pagina Open Data e file di oggi
+        run: |
+          UA="PagellaEnergia/0.1 (+https://github.com/contino23/pagella-energia)"
+          OGGI=$(TZ=Europe/Rome date +%Y%m%d)
+          AM=$(TZ=Europe/Rome date +%Y_%-m)
+          AM2=$(TZ=Europe/Rome date +%Y_%m)
+          BASE=https://www.ilportaleofferte.it/portaleOfferte
+          prova() { printf '%-90s ' "$1"; curl -s -A "$UA" -o /tmp/out -w '%{http_code} %{size_download}B\n' -m 60 "$1" || echo "errore curl"; }
+          prova "$BASE/it/open-data.page"
+          for T in E G D; do
+            prova "$BASE/resources/opendata/csv/offerteML/$AM/PO_Offerte_${T}_MLIBERO_$OGGI.xml"
+            prova "$BASE/resources/opendata/csv/offerteML/$AM2/PO_Offerte_${T}_MLIBERO_$OGGI.xml"
+          done
+          for T in E G; do
+            prova "$BASE/resources/opendata/csv/parametriML/$AM/PO_Parametri_Mercato_Libero_${T}_$OGGI.csv"
+          done
+          echo "--- link presenti nella pagina Open Data ---"
+          curl -s -A "$UA" -m 60 "$BASE/it/open-data.page" | grep -oiE 'href="[^"]*(xml|csv)[^"]*"' | head -40 || true
