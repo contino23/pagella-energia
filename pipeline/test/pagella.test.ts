@@ -1,0 +1,46 @@
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+import { creaPagella, stimaSpesaLuce, votoPrezzo, votoVincoli } from "@pagella/core";
+import { leggiOfferteXml } from "../src/leggi-offerte.js";
+import { leggiParametriCsv } from "../src/leggi-parametri.js";
+
+const leggi = (f: string) => readFileSync(new URL(`./fixtures/${f}`, import.meta.url), "utf8");
+const { offerte } = leggiOfferteXml(leggi("luce-3-offerte.xml"), "luce");
+const parametri = leggiParametriCsv(leggi("PO_Parametri_Mercato_Libero_E_20261103.csv")).parametri;
+const beeFlat = offerte.find((o) => o.codice === "000432ESFML01XXAPEBEEFLAT2026V04")!;
+const stima = stimaSpesaLuce(beeFlat, { consumoAnnuoKwh: 2700, potenzaKw: 3, residente: true }, parametri, { valori: {}, descrizione: "" });
+
+describe("pagella", () => {
+  it("voto prezzo: 10 alla più economica, 0 alla più cara, 5 alla mediana, pari merito alla pari", () => {
+    const spese = [800, 900, 1000, 1100, 1200];
+    expect(votoPrezzo(800, spese).voto).toBe(10);
+    expect(votoPrezzo(1200, spese).voto).toBe(0);
+    expect(votoPrezzo(1000, spese).voto).toBe(5);
+    expect(votoPrezzo(900, [900, 900, 1000]).voto).toBe(votoPrezzo(900, [900, 900, 1000]).voto);
+    expect(votoPrezzo(1000, spese).motivi[0]).toContain("200 €");
+  });
+
+  it("vincoli: la penale di recesso toglie 4 punti", () => {
+    expect(beeFlat.derivati.haPenaleRecesso).toBe(true);
+    const v = votoVincoli(beeFlat);
+    expect(v.voto).toBeLessThanOrEqual(6);
+    expect(v.motivi.join(" ")).toContain("Penale");
+  });
+
+  it("voto complessivo: pesi 60/20/10 ridistribuiti senza la voce affidabilità", () => {
+    const p = creaPagella(beeFlat, stima, [stima.totale, stima.totale + 100, stima.totale + 200]);
+    const pesi = Object.fromEntries(p.voci.map((v) => [v.voce, v.peso]));
+    expect(pesi).toEqual({ prezzo: 0.667, vincoli: 0.222, trasparenza: 0.111, affidabilita: 0 });
+    const atteso = p.voci.reduce((s, v) => s + (v.voto ?? 0) * v.peso, 0);
+    expect(p.voto).toBeCloseTo(atteso, 1);
+    expect(p.voto).toBeGreaterThanOrEqual(0);
+    expect(p.voto).toBeLessThanOrEqual(10);
+    expect(p.note.join(" ")).toContain("bloccato per 39 mesi");
+  });
+
+  it("con lo storico, l'affidabilità entra con il suo 10%", () => {
+    const p = creaPagella(beeFlat, stima, [stima.totale], { voto: 8, motivi: ["test"] });
+    expect(p.voci.find((v) => v.voce === "affidabilita")!.peso).toBe(0.1);
+    expect(p.voci.find((v) => v.voce === "prezzo")!.peso).toBe(0.6);
+  });
+});
