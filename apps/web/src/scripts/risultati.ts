@@ -191,11 +191,15 @@ function htmlScheda(r: RisultatoOfferta, pos: number, aperta: boolean): string {
       <span class="pe-grade ${classeVoto(r.pagella.voto)}"${aperta ? "" : ' style="font-size:28px"'}>${voto(r.pagella.voto)}</span>
     </div>
     ${htmlAvvisi(r)}
-    ${aperta ? `<div class="dettagli">${htmlPagella(r)}${htmlPrezzo(r)}</div>` : `<button type="button" class="filtro altre" data-apri="${h(o.codice)}" style="align-self:flex-start">Vedi pagella e prezzo spiegato</button>`}
+    ${aperta ? `<div class="dettagli">${htmlPagella(r)}${htmlPrezzo(r)}</div>` : ""}
+    <button type="button" class="filtro altre" data-scheda="${h(o.codice)}" aria-expanded="${aperta}" style="align-self:flex-start">${aperta ? "Nascondi pagella e prezzo spiegato" : "Vedi pagella e prezzo spiegato"}</button>
   </article>`;
 }
 
 let aperte = new Set<string>();
+/** La prima scheda è aperta di partenza: qui finisce se l'utente la chiude. */
+let chiuse = new Set<string>();
+const eAperta = (codice: string, i: number) => aperte.has(codice) || (i === 0 && !chiuse.has(codice));
 
 function filtrati(): RisultatoOfferta[] {
   return risultati.filter((r) =>
@@ -207,7 +211,7 @@ function disegnaLista() {
   const lista = filtrati();
   $("#conteggio").textContent = `${numero(risultati.length)} confrontate · ordinate per voto`;
   $("#lista").innerHTML = lista.length
-    ? lista.slice(0, mostrate).map((r, i) => htmlScheda(r, i + 1, i === 0 || aperte.has(r.offerta.codice))).join("")
+    ? lista.slice(0, mostrate).map((r, i) => htmlScheda(r, i + 1, eAperta(r.offerta.codice, i))).join("")
     : `<div class="vuoto">Nessuna offerta con questo filtro per i tuoi dati.</div>`;
   const altre = $("#altre");
   altre.hidden = lista.length <= mostrate;
@@ -294,6 +298,7 @@ function calcola(s: Stato) {
   ultimo = s;
   mostrate = 10;
   aperte = new Set();
+  chiuse = new Set();
   disegnaTua(s);
   disegnaLista();
   const ind = s.c === "luce" ? "PUN" : "PSV";
@@ -338,8 +343,18 @@ async function avvia() {
   );
   $("#altre").addEventListener("click", () => { mostrate += 10; disegnaLista(); });
   $("#lista").addEventListener("click", (e) => {
-    const b = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-apri]");
-    if (b) { aperte.add(b.dataset.apri!); disegnaLista(); }
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-scheda]");
+    if (!b) return;
+    const codice = b.dataset.scheda!;
+    const scheda = b.closest("article")!;
+    if (b.getAttribute("aria-expanded") === "true") { aperte.delete(codice); chiuse.add(codice); }
+    else { aperte.add(codice); chiuse.delete(codice); }
+    const indice = [...$("#lista").children].indexOf(scheda);
+    disegnaLista();
+    // Dopo la chiusura riporta in vista la scheda, così non si perde il punto della lista.
+    const nuova = $("#lista").children[indice] as HTMLElement | undefined;
+    nuova?.querySelector<HTMLButtonElement>("[data-scheda]")?.focus({ preventScroll: true });
+    if (nuova && nuova.getBoundingClientRect().top < 0) nuova.scrollIntoView({ block: "start" });
   });
   window.addEventListener("hashchange", () => { const n = leggiHash(); riempiModulo(n); calcola(n); });
 }
