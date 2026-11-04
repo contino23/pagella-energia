@@ -6,3 +6,4 @@ export * from "./pagella.js";
 export * from "./scenari.js";
 export * from "./classifica.js";
 export * from "./lettura-bolletta.js";
+export * from "./offerta-da-bolletta.js";

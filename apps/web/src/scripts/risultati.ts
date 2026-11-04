@@ -2,7 +2,7 @@
  * Pagina risultati: legge i dati dal # dell'indirizzo (o dal modulo), calcola nel browser
  * la classifica con @pagella/core e disegna le schede. Nessun dato lascia il dispositivo.
  */
-import { classifica, valutaOfferta, ZONA_CLIMATICA_TIPICA, type Offerta, type ProfiloClassifica, type RisultatoOfferta } from "@pagella/core";
+import { classifica, offertaDaBolletta, valutaOfferta, votoPrezzo, ZONA_CLIMATICA_TIPICA, type DatiBolletta, type Offerta, type ProfiloClassifica, type RisultatoOfferta, type VocePagella } from "@pagella/core";
 import { collegaCaricatore } from "./bolletta.js";
 import { caricaComuni, caricaMercato, caricaOfferte, type Comune, type Mercato } from "./dati.js";
 import { classeVoto, descriviPrezzo, dominio, euro, h, ICONE, nomeLeggibile, numero, prezzoKwh, voto } from "./formato.js";
@@ -18,13 +18,20 @@ interface Stato {
   cod?: string;
   spesa?: number;
   letti: string[];
+  /** Dati letti in bolletta per ricostruire un'offerta non più in vendita. */
+  bolletta?: Pick<DatiBolletta, "nomeOfferta" | "tipoPrezzo" | "prezzoVendita" | "quotaFissaMese" | "periodo" | "penaleRecesso" | "spesaAnnua">;
 }
+
+type Origine = "portale" | "bolletta" | "spesa" | null;
 
 const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
 const form = $<HTMLFormElement>("#dati");
 let mercato: Mercato, offerte: Offerta[], comuni: Comune[];
 let risultati: RisultatoOfferta[] = [];
 let tua: RisultatoOfferta | null = null;
+let origine: Origine = null;
+let soloPrezzo: VocePagella | null = null;
+let ultimo: Stato | null = null;
 let riferimento: number | null = null;
 let filtro: Filtro = "tutte";
 let mostrate = 10;
@@ -45,7 +52,27 @@ function leggiHash(): Stato {
   if (comune) s.comune = comune;
   if (cod) s.cod = cod.toUpperCase();
   if (spesa > 0) s.spesa = spesa;
+  const b: NonNullable<Stato["bolletta"]> = {};
+  const nome = p.get("nome"), tp = p.get("tp"), pv = Number(p.get("pv")), qf = Number(p.get("qf")), pd = p.get("pd"), pa = p.get("pa"), pen = p.get("pen"), sa = Number(p.get("sa"));
+  if (nome) b.nomeOfferta = nome.slice(0, 80);
+  if (tp === "v" || tp === "f") b.tipoPrezzo = tp === "v" ? "variabile" : "fisso";
+  if (pv > 0 && pv < 5) b.prezzoVendita = pv;
+  if (qf >= 0 && p.get("qf")) b.quotaFissaMese = qf;
+  if (pd && pa && /^\d{4}-\d{2}$/.test(pd) && /^\d{4}-\d{2}$/.test(pa)) b.periodo = { da: pd, a: pa };
+  if (pen === "0" || pen === "1") b.penaleRecesso = pen === "1";
+  if (sa > 0) b.spesaAnnua = sa;
+  if (Object.keys(b).length) s.bolletta = b;
   return s;
+}
+
+function aggiungiBolletta(p: URLSearchParams, b: NonNullable<Stato["bolletta"]>) {
+  if (b.nomeOfferta) p.set("nome", b.nomeOfferta);
+  if (b.tipoPrezzo) p.set("tp", b.tipoPrezzo === "variabile" ? "v" : "f");
+  if (b.prezzoVendita !== undefined) p.set("pv", String(b.prezzoVendita));
+  if (b.quotaFissaMese !== undefined) p.set("qf", String(b.quotaFissaMese));
+  if (b.periodo) { p.set("pd", b.periodo.da); p.set("pa", b.periodo.a); }
+  if (b.penaleRecesso !== undefined) p.set("pen", b.penaleRecesso ? "1" : "0");
+  if (b.spesaAnnua) p.set("sa", String(b.spesaAnnua));
 }
 
 function scriviHash(s: Stato) {
@@ -55,6 +82,8 @@ function scriviHash(s: Stato) {
   if (s.comune) p.set("comune", s.comune);
   if (s.cod) p.set("cod", s.cod);
   if (s.spesa) p.set("spesa", String(s.spesa));
+  if (s.bolletta) aggiungiBolletta(p, s.bolletta);
+  if (s.letti.length) p.set("letti", s.letti.join(","));
   history.replaceState(null, "", `#${p.toString()}`);
 }
 
@@ -88,6 +117,8 @@ function leggiModulo(): Stato {
   if (com) s.comune = com.codice;
   if (v("cod")) s.cod = v("cod").toUpperCase();
   if (n(v("spesa")) > 0) s.spesa = n(v("spesa"));
+  // I prezzi letti in bolletta restano validi finché non cambi fornitura o codice.
+  if (ultimo?.bolletta && ultimo.c === s.c && ultimo.cod === s.cod) { s.bolletta = ultimo.bolletta; s.letti = ultimo.letti; }
   return s;
 }
 
@@ -183,24 +214,53 @@ function disegnaLista() {
   altre.textContent = `Mostra altre ${Math.min(10, lista.length - mostrate)} offerte`;
 }
 
+function htmlVoto(v: number, dimensione = 40): string {
+  return `<span><span class="pe-grade ${classeVoto(v)}" style="font-size:${dimensione}px">${voto(v)}</span><span class="pe-grade-of">/10</span></span>`;
+}
+
+function htmlMetro(v: number): string {
+  return `<div class="pe-meter" role="img" aria-label="Voto ${voto(v)} su 10"><div class="pe-meter-fill ${v >= 6 ? "good" : "warn"}" style="width:${v * 10}%"></div></div>`;
+}
+
+function giudizio(v: number): string {
+  return v >= 8 ? "Ottima: tra le più convenienti per te" : v >= 6 ? "Sufficiente: ci sono offerte simili o un po' migliori" : v >= 4 ? "Insufficiente: stai pagando più del necessario" : "Gravemente insufficiente: puoi risparmiare molto";
+}
+
 function disegnaTua(s: Stato) {
   const box = $("#tua-offerta");
   const risp = $("#risparmio");
   const icona = s.c === "luce" ? ICONE.fulmine : ICONE.fiamma;
-  const chip = s.letti.length
-    ? `<span class="pe-chip pe-chip-${s.c}" style="align-self:flex-start">${icona}Bolletta ${s.c} letta</span><span style="font-size:13px;color:var(--ink-muted);margin-top:-4px">Abbiamo trovato: ${h(s.letti.join(", "))}. Controlla i dati qui sotto.</span>`
-    : `<span class="pe-chip pe-chip-${s.c}" style="align-self:flex-start">${icona}${s.c === "luce" ? "Luce" : "Gas"}</span>`;
+  const chip = `<span class="pe-chip pe-chip-${s.c}" style="align-self:flex-start">${icona}${s.letti.length ? `Bolletta ${s.c} letta` : s.c === "luce" ? "Luce" : "Gas"}</span>`;
+  const spesaBolletta = s.bolletta?.spesaAnnua;
+  const notaSpesa = spesaBolletta && tua
+    ? `<p class="nota-tua">Nell'ultimo anno hai speso <strong>${euro(spesaBolletta)}</strong> (dato della bolletta). La spesa qui sopra invece è la stima per i prossimi 12 mesi ai prezzi di oggi, calcolata come per tutte le altre offerte.</p>`
+    : "";
   if (tua) {
     const o = tua.offerta;
+    const fonte = origine === "bolletta"
+      ? "Non più in vendita: voto calcolato con i prezzi letti nella tua bolletta"
+      : "Condizioni ufficiali dal Portale Offerte";
     box.innerHTML = `${chip}<span class="occhiello">Il voto della tua offerta</span>
-      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px"><div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:22px;font-weight:800">${h(nomeLeggibile(o.nome))}</span><span style="font-size:14px;color:var(--ink-muted)">${h(descriviPrezzo(o))}</span></div><span><span class="pe-grade ${classeVoto(tua.pagella.voto)}" style="font-size:40px">${voto(tua.pagella.voto)}</span><span class="pe-grade-of">/10</span></span></div>
-      <div class="pe-meter" role="img" aria-label="Voto ${voto(tua.pagella.voto)} su 10"><div class="pe-meter-fill ${tua.pagella.voto >= 6 ? "good" : "warn"}" style="width:${tua.pagella.voto * 10}%"></div></div>
-      <div class="pe-figures" style="grid-template-columns:repeat(2,minmax(0,1fr))"><div class="pe-figure"><span class="pe-figure-label">Spendi all'anno</span><span class="pe-figure-value">${euro(tua.stima.totale)}</span></div><div class="pe-figure"><span class="pe-figure-label">Al mese</span><span class="pe-figure-value">${euro(tua.stima.totale / 12)}</span></div></div>
-      ${tua.avvisi.length ? htmlAvvisi(tua) : ""}`;
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px"><div style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="font-size:22px;font-weight:800;overflow-wrap:anywhere">${h(nomeLeggibile(o.nome))}</span><span style="font-size:14px;color:var(--ink-muted)">${h(descriviPrezzo(o))}</span></div>${htmlVoto(tua.pagella.voto)}</div>
+      ${htmlMetro(tua.pagella.voto)}
+      <strong style="font-size:15px">${h(giudizio(tua.pagella.voto))}</strong>
+      <div class="pe-figures" style="grid-template-columns:repeat(2,minmax(0,1fr))"><div class="pe-figure"><span class="pe-figure-label">Spesa annua stimata</span><span class="pe-figure-value">${euro(tua.stima.totale)}</span></div><div class="pe-figure"><span class="pe-figure-label">Al mese</span><span class="pe-figure-value">${euro(tua.stima.totale / 12)}</span></div></div>
+      ${notaSpesa}
+      ${tua.avvisi.length ? htmlAvvisi(tua) : ""}
+      <details class="perche"><summary>Perché questo voto</summary>${htmlPagella(tua)}<p class="fonte" style="margin:8px 0 0">${h(fonte)}.</p></details>`;
+  } else if (soloPrezzo) {
+    const spesa = s.spesa ?? spesaBolletta!;
+    box.innerHTML = `${chip}<span class="occhiello">Il voto della tua bolletta</span>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px"><div style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="font-size:22px;font-weight:800">${h(s.bolletta?.nomeOfferta ? nomeLeggibile(s.bolletta.nomeOfferta) : "La tua offerta")}</span><span style="font-size:14px;color:var(--ink-muted)">Voto sul solo prezzo</span></div>${htmlVoto(soloPrezzo.voto!)}</div>
+      ${htmlMetro(soloPrezzo.voto!)}
+      <strong style="font-size:15px">${h(giudizio(soloPrezzo.voto!))}</strong>
+      <div class="pe-figures" style="grid-template-columns:repeat(2,minmax(0,1fr))"><div class="pe-figure"><span class="pe-figure-label">Spendi all'anno</span><span class="pe-figure-value">${euro(spesa)}</span></div><div class="pe-figure"><span class="pe-figure-label">Al mese</span><span class="pe-figure-value">${euro(spesa / 12)}</span></div></div>
+      <ul class="motivi" style="margin:0">${soloPrezzo.motivi.map((m) => `<li>${h(m)}</li>`).join("")}</ul>
+      <p class="nota-tua">${s.cod ? `Il codice ${h(s.cod)} non è tra le offerte in vendita oggi e non abbiamo trovato i suoi prezzi in bolletta, quindi ` : ""}confrontiamo la spesa annua con quella stimata per le altre offerte. È un confronto approssimato: la tua spesa è passata, le altre sono stime per i prossimi 12 mesi.</p>`;
   } else if (s.cod) {
-    box.innerHTML = `${chip}<span class="occhiello">La tua offerta</span><p style="margin:0;font-size:15px;line-height:1.5">Il codice <strong>${h(s.cod)}</strong> non è tra le offerte pubblicate oggi sul Portale Offerte: probabilmente non è più in vendita. Per vedere quanto risparmi, scrivi quanto spendi all'anno nel modulo qui sotto.</p>`;
+    box.innerHTML = `${chip}<span class="occhiello">La tua offerta</span><p style="margin:0;font-size:15px;line-height:1.5">Il codice <strong>${h(s.cod)}</strong> non è tra le offerte pubblicate oggi sul Portale Offerte e non abbiamo trovato i suoi prezzi in bolletta. Per avere il voto, scrivi quanto spendi all'anno nel modulo qui sotto.</p>`;
   } else {
-    box.innerHTML = `${chip}<span class="occhiello">La tua offerta</span><p style="margin:0;font-size:15px;line-height:1.5">Carica la bolletta o scrivi il codice offerta per vedere il voto della tua offerta e quanto risparmi.</p>`;
+    box.innerHTML = `${chip}<span class="occhiello">La tua offerta</span><p style="margin:0;font-size:15px;line-height:1.5">Carica la bolletta, scrivi il codice offerta o quanto spendi all'anno per vedere il voto della tua offerta e quanto risparmi.</p>`;
   }
   const migliore = risultati[0];
   if (migliore && riferimento !== null) {
@@ -217,8 +277,21 @@ function calcola(s: Stato) {
   risultati = classifica(offerte, profilo, mercato.parametri, mercato.scenari);
   const propria = s.cod ? offerte.find((o) => o.codice === s.cod) : undefined;
   tua = propria ? valutaOfferta(propria, profilo, mercato.parametri, mercato.scenari, risultati) : null;
+  origine = tua ? "portale" : null;
+  soloPrezzo = null;
+  if (!tua && s.bolletta?.prezzoVendita !== undefined) {
+    const ricostruita = offertaDaBolletta({ ...s.bolletta, commodity: s.c, ...(s.cod ? { codiceOfferta: s.cod } : {}), trovati: [] }, mercato.indici, mercato.parametri);
+    tua = ricostruita ? valutaOfferta(ricostruita, profilo, mercato.parametri, mercato.scenari, risultati) : null;
+    if (tua) origine = "bolletta";
+  }
   if (tua) risultati = risultati.filter((r) => r.offerta.codice !== tua!.offerta.codice);
-  riferimento = tua ? tua.stima.totale : s.spesa ?? null;
+  const spesaDichiarata = s.spesa ?? s.bolletta?.spesaAnnua;
+  if (!tua && spesaDichiarata && risultati.length) {
+    soloPrezzo = votoPrezzo(spesaDichiarata, [...risultati.map((r) => r.stima.totale), spesaDichiarata]);
+    origine = "spesa";
+  }
+  riferimento = tua ? tua.stima.totale : spesaDichiarata ?? null;
+  ultimo = s;
   mostrate = 10;
   aperte = new Set();
   disegnaTua(s);

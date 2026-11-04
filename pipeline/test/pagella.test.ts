@@ -11,13 +11,16 @@ const beeFlat = offerte.find((o) => o.codice === "000432ESFML01XXAPEBEEFLAT2026V
 const stima = stimaSpesaLuce(beeFlat, { consumoAnnuoKwh: 2700, potenzaKw: 3, residente: true }, parametri, { valori: {}, descrizione: "" });
 
 describe("pagella", () => {
-  it("voto prezzo: 10 alla più economica, 0 alla più cara, 5 alla mediana, pari merito alla pari", () => {
-    const spese = [800, 900, 1000, 1100, 1200];
+  it("voto prezzo: scala sullo scarto dalla più economica (+10% → 6, +50% → 0)", () => {
+    const spese = [800, 840, 880, 1000, 1200];
     expect(votoPrezzo(800, spese).voto).toBe(10);
-    expect(votoPrezzo(1200, spese).voto).toBe(0);
-    expect(votoPrezzo(1000, spese).voto).toBe(5);
-    expect(votoPrezzo(900, [900, 900, 1000]).voto).toBe(votoPrezzo(900, [900, 900, 1000]).voto);
+    expect(votoPrezzo(840, spese).voto).toBe(8); // +5%
+    expect(votoPrezzo(880, spese).voto).toBe(6); // +10%
+    expect(votoPrezzo(1000, spese).voto).toBe(3.8); // +25%
+    expect(votoPrezzo(1200, spese).voto).toBe(0); // +50%
     expect(votoPrezzo(1000, spese).motivi[0]).toContain("200 €");
+    // Una spesa assurdamente bassa (errore nei dati) non diventa il riferimento.
+    expect(votoPrezzo(840, [100, 800, 840, 900, 1000]).voto).toBe(8);
   });
 
   it("vincoli: la penale di recesso toglie 4 punti", () => {

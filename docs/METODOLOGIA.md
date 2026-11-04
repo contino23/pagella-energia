@@ -41,7 +41,7 @@ Voto da 0 a 10 per ogni voce, voto complessivo pesato:
 
 | Voce | Peso | Cosa misura |
 |---|---|---|
-| Prezzo | 60% | Posizione della spesa stimata tra le offerte confrontabili per il tuo profilo e il tuo comune. 10 = la più economica, 5 = la mediana, 0 = la più cara. |
+| Prezzo | 60% | Quanto costa in più, in percentuale, della più economica tra le offerte confrontabili per il tuo profilo e il tuo comune. 10 = la più economica; +5% → 8; +10% → 6 (sufficienza); +25% → 3,8; +50% o più → 0. Come riferimento non si usano spese sotto la metà della mediana, quasi sempre errori nei dati pubblicati. |
 | Vincoli | 20% | Parte da 10. −4 se c'è una penale di recesso anticipato; −1 se può essere richiesto un deposito o una garanzia. |
 | Trasparenza | 10% | Parte da 10. Fino a −4 in proporzione a quanto della convenienza viene da sconti solo iniziali; fino a −2 per costi una tantum; −1 per servizi aggiuntivi inclusi; −2 se i dati sono incompleti. |
 | Affidabilità del venditore | 10% | Dallo storico: spread sull'indice nel tempo, frequenza delle modifiche, rapidità nel trasferire i ribassi. **In arrivo**: finché non è disponibile, il suo peso si ripartisce in proporzione sulle altre voci. |
@@ -51,3 +51,5 @@ Prezzo fisso e variabile non sono premiati né penalizzati in sé: è una scelta
 ## Decisioni e date
 
 - 3/11/2026: pesi 60/20/10/10; scenario centrale per le variabili = media ultimi 3 mesi.
+- 4/11/2026: il voto prezzo non è più la posizione in classifica (dava 9 e 10 a centinaia di offerte quasi uguali) ma lo scarto in euro dalla più economica, con la sufficienza a +10%.
+- 4/11/2026: se l'offerta della bolletta non è più in vendita, la ricostruiamo dai prezzi della "spesa per la vendita" stampati in bolletta (per le variabili: prezzo pagato meno l'indice dei mesi fatturati = spread) e la valutiamo come le altre. Se mancano anche quelli, diamo il voto sul solo prezzo partendo dalla spesa annua.

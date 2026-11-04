@@ -15,6 +15,18 @@ export interface DatiBolletta {
   potenzaKw?: number;
   residente?: boolean;
   cap?: string;
+  /** Dal Box dell'offerta e dallo scontrino dell'energia (bolletta ARERA dal 2025). */
+  nomeOfferta?: string;
+  tipoPrezzo?: "fisso" | "variabile";
+  /** Prezzo medio della "spesa per la vendita" a consumo, €/kWh o €/Smc, IVA esclusa. */
+  prezzoVendita?: number;
+  /** Quota fissa della "spesa per la vendita", €/mese. */
+  quotaFissaMese?: number;
+  /** Mesi del periodo fatturato, "AAAA-MM". */
+  periodo?: { da: string; a: string };
+  penaleRecesso?: boolean;
+  /** "Spesa annua sostenuta" negli ultimi 12 mesi, € IVA inclusa. */
+  spesaAnnua?: number;
   /** Quali campi sono stati trovati, per mostrare all'utente cosa verificare. */
   trovati: string[];
 }
@@ -94,6 +106,52 @@ export function estraiDatiBolletta(testo: string, codiciNoti: ReadonlySet<string
   if (ia) {
     out.cap = ia[1];
     out.trovati.push("CAP di fornitura");
+  }
+
+  // 7. Box dell'offerta: nome e tipo di prezzo.
+  const mn = /(?:denominazione commerciale dell'offerta|nome (?:dell')?offerta)[ \t]*:?[ \t]+([^\n]{2,60})/i.exec(t);
+  if (mn) {
+    out.nomeOfferta = mn[1]!.trim();
+    out.trovati.push("nome offerta");
+  }
+  const mt = /tipo(?:logia)? (?:di )?(?:offerta|prezzo)[ \t]*:?[ \t]+(?:a )?prezzo (fisso|variabile)|tipo di prezzo[ \t]*:?[ \t]+(fisso|variabile)/i.exec(t);
+  if (mt) out.tipoPrezzo = (mt[1] ?? mt[2])!.toLowerCase() as "fisso" | "variabile";
+
+  // 8. Scontrino dell'energia: "di cui spesa per la vendita … 0,245077 €/kWh" e "… 5,050000 €/mese".
+  const reVendita = new RegExp(`spesa per la vendita[^\\n]*?(\\d+,\\d+)\\s*€\\s*/\\s*${unita}`, "i");
+  const mv = reVendita.exec(t);
+  if (mv) {
+    const v = numero(mv[1]!);
+    if (v > 0 && v < (unita === "Smc" ? 5 : 1)) {
+      out.prezzoVendita = v;
+      out.trovati.push("prezzo dell'energia");
+    }
+  }
+  const mq = /spesa per la vendita[^\n]*?(\d+,\d+)\s*€\s*\/\s*(mese|anno)\b/i.exec(t);
+  if (mq) {
+    const v = numero(mq[1]!) / (mq[2]!.toLowerCase() === "anno" ? 12 : 1);
+    if (v >= 0 && v < 100) {
+      out.quotaFissaMese = v;
+      out.trovati.push("quota fissa");
+    }
+  }
+
+  // 9. Periodo fatturato.
+  const mper = /periodo[^\n]{0,40}?fatturazion\w*\s*:?\s*(?:dal\s+)?\d{2}\/(\d{2})\/(\d{4})\s*(?:-|–|al)\s*\d{2}\/(\d{2})\/(\d{4})/i.exec(piatto);
+  if (mper) out.periodo = { da: `${mper[2]}-${mper[1]}`, a: `${mper[4]}-${mper[3]}` };
+
+  // 10. Oneri di recesso anticipato.
+  const mr = /oneri di recesso anticipato[ \t]*:?[ \t]+([^\n]{1,60})/i.exec(t);
+  if (mr) out.penaleRecesso = !/non (?:present|previst|applicat)|assent|nessun|^\s*no\b|^\s*0(?:,0+)?\s*€?\s*$/i.test(mr[1]!);
+
+  // 11. Spesa annua sostenuta (obbligatoria nella bolletta sintetica).
+  const ms = /spesa annua(?: sostenuta)?\s*:?\s*(?:€\s*)?(\d{1,3}(?:\.\d{3})*,\d{2}|\d+,\d{2})\s*(?:€|euro)?/i.exec(piatto);
+  if (ms) {
+    const v = numero(ms[1]!);
+    if (v > 10 && v < 50_000) {
+      out.spesaAnnua = v;
+      out.trovati.push("spesa annua");
+    }
   }
   return out;
 }

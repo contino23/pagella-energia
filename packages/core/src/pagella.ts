@@ -38,26 +38,45 @@ const arrot = (x: number) => Math.round(x * 10) / 10;
 const euro = (x: number) => `${Math.round(x).toLocaleString("it-IT")} €`;
 
 /**
- * Voto prezzo: posizione della spesa stimata tra le offerte confrontabili.
- * 10 = la più economica, 0 = la più cara; la mediana prende 5.
- * Le offerte a pari spesa ricevono lo stesso voto.
+ * Voto prezzo: quanto costa in più, in percentuale, rispetto alla più economica confrontabile.
+ *  - fino a +10%: da 10 a 6 (0,4 punti per ogni 1%);
+ *  - oltre: da 6 a 0, che si raggiunge a +50% (0,15 punti per ogni 1%).
+ * Così un voto alto vuol dire davvero "vicina alla migliore": il 6 corrisponde a circa
+ * 1 € ogni 10 € in più della più economica. La più economica è calcolata escludendo
+ * le spese sotto la metà della mediana, che di solito sono errori nei dati pubblicati.
  */
+export const SOGLIE_PREZZO = { sufficienza: 0.1, zero: 0.5 } as const;
+
+export function votoDaScarto(scarto: number): number {
+  const { sufficienza, zero } = SOGLIE_PREZZO;
+  if (scarto <= 0) return 10;
+  if (scarto <= sufficienza) return 10 - (4 * scarto) / sufficienza;
+  return Math.max(0, 6 - (6 * (scarto - sufficienza)) / (zero - sufficienza));
+}
+
+export function riferimentoPrezzo(confrontabili: number[]): number {
+  const ord = [...confrontabili].sort((a, b) => a - b);
+  const mediana = ord[Math.floor((ord.length - 1) / 2)] ?? 0;
+  return ord.find((x) => x >= mediana / 2) ?? ord[0] ?? 0;
+}
+
 export function votoPrezzo(spesa: number, confrontabili: number[]): VocePagella {
   const n = confrontabili.length;
   if (n <= 1) return { voce: "prezzo", voto: 10, peso: PESI.prezzo, motivi: ["Unica offerta confrontabile"] };
-  const piuEconomiche = confrontabili.filter((x) => x < spesa - 0.005).length;
-  const pari = confrontabili.filter((x) => Math.abs(x - spesa) <= 0.005).length;
-  const rango = piuEconomiche + (pari - 1) / 2; // rango medio in caso di pareggio
-  const voto = arrot(10 * (1 - rango / (n - 1)));
-  const minimo = Math.min(...confrontabili);
+  const minimo = Math.min(riferimentoPrezzo(confrontabili), spesa);
+  const scarto = minimo > 0 ? spesa / minimo - 1 : 0;
+  const voto = arrot(votoDaScarto(scarto));
+  const piuCare = confrontabili.filter((x) => x > spesa + 0.005).length;
   const motivi = [
     spesa - minimo < 1
       ? "È l'offerta più economica tra quelle confrontabili"
-      : `Costa ${euro(spesa - minimo)} l'anno in più della più economica`,
-    `Più economica di ${Math.floor((100 * (n - 1 - piuEconomiche - (pari - 1))) / n)}% delle ${n} offerte confrontabili`,
+      : `Costa ${euro(spesa - minimo)} l'anno in più della più economica (+${Math.round(scarto * 100)}%)`,
+    `Più economica di ${Math.floor((100 * piuCare) / n)}% delle ${numeroIt(n)} offerte confrontabili`,
   ];
   return { voce: "prezzo", voto, peso: PESI.prezzo, motivi };
 }
+
+const numeroIt = (x: number) => x.toLocaleString("it-IT", { useGrouping: "always" as unknown as boolean });
 
 const RE_DEPOSITO = /deposit|cauzion|fideiussion/i;
 const RE_NESSUN_DEPOSITO = /nessun|non (è|e'|viene|sarà) richiest|non prevede|non richiede|non c'è bisogno|non (è|e') necessari|^\s*(no|sepa)\s*$/i;
