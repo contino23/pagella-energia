@@ -4,6 +4,10 @@ name: Sito
 on:
   push:
     branches: [main]
+  # I commit dei dati fatti dal workflow non attivano "push": ripartiamo quando finisce.
+  workflow_run:
+    workflows: ["Aggiorna dati"]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -17,6 +21,7 @@ concurrency:
 
 jobs:
   costruisci:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

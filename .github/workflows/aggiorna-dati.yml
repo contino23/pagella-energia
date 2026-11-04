@@ -1,0 +1,56 @@
+# Aggiornamento quotidiano dei dati dal Portale Offerte.
+# Gira su un computer "di casa" registrato come runner (il Portale blocca i server di GitHub):
+# istruzioni in docs/AGGIORNAMENTO-DATI.md. Se il computer è spento salta un giorno, senza danni.
+name: Aggiorna dati
+
+on:
+  schedule:
+    # Ore UTC: 9:23 e 14:23 in Italia d'inverno (10:23 e 15:23 d'estate). Il secondo giro recupera il primo.
+    - cron: "23 8 * * *"
+    - cron: "23 13 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: aggiorna-dati
+  cancel-in-progress: false
+
+jobs:
+  aggiorna:
+    runs-on: [self-hosted, pagella]
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --no-audit --no-fund
+      - name: Scarica i file di oggi
+        id: scarica
+        run: npm run scarica
+      - name: Già aggiornato?
+        id: nuovo
+        run: |
+          if [ -d "data/fotografie/${{ steps.scarica.outputs.data }}" ]; then echo "si=no" >> "$GITHUB_OUTPUT"; echo "Fotografia del ${{ steps.scarica.outputs.data }} già presente"; else echo "si=si" >> "$GITHUB_OUTPUT"; fi
+      - name: Crea la fotografia
+        if: steps.nuovo.outputs.si == 'si'
+        run: npm run leggi -- ../data/raw/${{ steps.scarica.outputs.data }} ../data/fotografie
+      - name: Controlla che sito e calcoli funzionino con i dati nuovi
+        if: steps.nuovo.outputs.si == 'si'
+        run: npm test && npm run dati-web
+      - name: Salva nel repository
+        if: steps.nuovo.outputs.si == 'si'
+        run: |
+          git config user.name "pagella-energia-bot"
+          git config user.email "pagella-energia-bot@users.noreply.github.com"
+          git add data/fotografie data/indici
+          git commit -m "Dati del ${{ steps.scarica.outputs.data }}" || exit 0
+          git push
+      - name: Pulisci i file grezzi
+        if: always()
+        run: rm -rf data/raw

@@ -14,7 +14,8 @@
     "test": "npm test --workspace pipeline",
     "typecheck": "tsc -p packages/core && tsc -p pipeline",
     "sito": "npm run build --workspace apps/web",
-    "dati-web": "npm run esporta-web --workspace pipeline"
+    "dati-web": "npm run esporta-web --workspace pipeline",
+    "scarica": "npm run scarica --workspace pipeline"
   },
   "engines": {
     "node": ">=22"
