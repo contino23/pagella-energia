@@ -43,13 +43,16 @@ const birraGrande = ICONE.birra.replace('width="20" height="20"', 'width="26" he
       <slot />
     </main>
     <aside class="banner-birra" id="banner-birra" hidden aria-labelledby="banner-birra-titolo">
-      <span class="banner-birra-icona" set:html={birra} />
+      <span class="banner-birra-icona" set:html={birraGrande} />
       <div class="banner-birra-testo">
-        <strong id="banner-birra-titolo">Ti è utile<span class="solo-largo"> Pagella Energia</span>?</strong>
-        <span class="banner-birra-corpo">È gratis e senza pubblicità. Se ti ha fatto risparmiare, offrimi una birra.</span>
+        <strong id="banner-birra-titolo">Ti è utile Pagella Energia?</strong>
+        <span>È gratis, senza pubblicità e senza commissioni dai venditori. Lo tengo in piedi da solo: se ti ha fatto risparmiare, offrimi una birra.</span>
+        <div class="banner-birra-azioni">
+          <a class="birra" href={donazioni} target={esterno.target} rel={esterno.rel} data-donazione><span set:html={birra} />Offrimi una birra</a>
+          <button type="button" class="banner-birra-no" data-chiudi>No grazie</button>
+        </div>
       </div>
-      <a class="birra birra-piccola" href={donazioni} target={esterno.target} rel={esterno.rel} data-donazione>Offrimi una birra</a>
-      <button type="button" class="banner-birra-x" data-chiudi aria-label="Chiudi, non mostrarlo più">×</button>
+      <button type="button" class="banner-birra-x" data-chiudi aria-label="Chiudi">×</button>
     </aside>
     <footer class="piede">
       <div class="wrap">
