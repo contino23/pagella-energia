@@ -1,0 +1,46 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="it">
+<head><meta charset="utf-8"><title>Pagella Energia</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,800&amp;display=swap">
+<style>
+body{margin:0;background:var(--surface)}
+.cv{position:relative;width:960px;height:288px;background:var(--surface);overflow:hidden;font-family:var(--font-sans)}
+.cv svg{position:absolute;inset:0}
+.luce{fill:var(--luce)}.gas{fill:var(--gas)}.ink{fill:var(--ink)}.tint{fill:var(--luce-tint)}.gtint{fill:var(--gas-tint)}.good{fill:var(--good)}.off{fill:var(--line)}
+.blk{rx:var(--radius-lg)}.seg{rx:3px}
+.txt{position:absolute;left:40px;bottom:32px;max-width:440px;display:flex;flex-direction:column;gap:12px}
+.name{margin:0;font-size:96px;line-height:.95;font-weight:800;letter-spacing:-0.035em;color:var(--ink)}
+.tag{margin:0;font-size:14px;color:var(--ink-muted)}
+</style></head>
+<body>
+<div class="cv">
+  <svg width="960" height="288" viewBox="0 0 960 288" aria-hidden="true">
+    <!--
+      blocchi: luce 200×176, gas 224×112, ink 224×160, luce-tint 200×96 (lati multipli di space-4/space-6, raggio radius-lg)
+      disposizione: due colonne sfalsate a destra di x=480, luce e gas in alto come le due commodity, ink sotto il gas
+      motivo: la barra del voto a dieci segmenti (il segno più riconoscibile del servizio), 8 pieni in luce su ink
+      passi e raggi: segmenti 16px con passo 20 (space-4 + space-1), raggio 3px della barra; blocchi radius-lg 18px
+    -->
+    <rect class="luce blk" x="520" y="-18" width="200" height="194"></rect>
+    <rect class="tint blk" x="520" y="192" width="200" height="96"></rect>
+    <rect class="gas blk" x="736" y="-18" width="242" height="130"></rect>
+    <rect class="ink blk" x="736" y="128" width="242" height="178"></rect>
+    <rect class="luce seg" x="756" y="176" width="16" height="64"></rect>
+    <rect class="luce seg" x="776" y="176" width="16" height="64"></rect>
+    <rect class="luce seg" x="796" y="176" width="16" height="64"></rect>
+    <rect class="luce seg" x="816" y="176" width="16" height="64"></rect>
+    <rect class="luce seg" x="836" y="176" width="16" height="64"></rect>
+    <rect class="luce seg" x="856" y="176" width="16" height="64"></rect>
+    <rect class="luce seg" x="876" y="176" width="16" height="64"></rect>
+    <rect class="luce seg" x="896" y="176" width="16" height="64"></rect>
+    <rect class="gtint seg" x="916" y="176" width="16" height="64"></rect>
+    <rect class="gtint seg" x="936" y="176" width="16" height="64"></rect>
+  </svg>
+  <div class="txt">
+    <h1 class="name">Pagella<br>Energia</h1>
+    <p class="tag">Il voto alla tua bolletta della luce e del gas.</p>
+  </div>
+</div>
+</body>
+</html>
