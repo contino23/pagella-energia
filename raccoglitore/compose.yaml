@@ -1,0 +1,19 @@
+services:
+  raccoglitore:
+    build: .
+    image: pagella-energia/raccoglitore
+    container_name: pagella-raccoglitore
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - ./dati:/dati
+    # Niente porte aperte, niente privilegi: il container esce solo verso Portale Offerte e GitHub.
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 1g
+    cpus: 1
+    logging:
+      driver: json-file
+      options: { max-size: "5m", max-file: "3" }

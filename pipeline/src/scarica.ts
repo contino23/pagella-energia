@@ -2,7 +2,7 @@
  * Scarica i file di oggi dalla pagina Open Data del Portale Offerte.
  *
  * Il Portale rifiuta le richieste dai datacenter (403 da GitHub Actions e dai server cloud),
- * per questo gira su un computer "di casa" registrato come runner di GitHub (vedi docs/AGGIORNAMENTO-DATI.md).
+ * per questo gira nel container di raccoglitore/ su una rete che il Portale accetta (vedi docs/AGGIORNAMENTO-DATI.md).
  *
  * Non indoviniamo gli indirizzi: leggiamo la pagina Open Data e prendiamo i link che contiene.
  *  - offerte:   PO_Offerte_{E|G|D}_MLIBERO_AAAAMMGG.xml
