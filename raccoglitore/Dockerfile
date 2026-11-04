@@ -7,7 +7,8 @@ RUN apt-get update \
 ENV TZ=Europe/Rome \
     REPO=contino23/pagella-energia \
     ORARI="09:20 14:20" \
-    CARTELLA=/dati
+    CARTELLA=/dati \
+    NPM_CONFIG_UPDATE_NOTIFIER=false
 COPY aggiorna.sh pianifica.sh prova.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/*.sh && mkdir -p /dati && chown node:node /dati
 USER node

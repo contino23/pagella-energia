@@ -17,6 +17,12 @@ g fetch --depth 50 origin main
 git reset -q --hard origin/main
 git clean -qfdx -e node_modules
 
+# Il token vale ancora e può scrivere? (push di prova: non cambia niente nel repository)
+if ! g push --dry-run -q origin HEAD:main 2>/dev/null; then
+  log "ERRORE: GitHub rifiuta il token (scaduto, revocato o senza permesso Contents: Read and write)"
+  exit 1
+fi
+
 log "Dipendenze"
 npm ci --no-audit --no-fund --loglevel=error
 
