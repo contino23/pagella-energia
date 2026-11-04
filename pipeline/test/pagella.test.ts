@@ -44,3 +44,12 @@ describe("pagella", () => {
     expect(p.voci.find((v) => v.voce === "prezzo")!.peso).toBe(0.6);
   });
 });
+
+describe("vincoli: lettura del testo sulle garanzie", () => {
+  const con = (garanzie: string) => votoVincoli({ ...beeFlat, garanzie, derivati: { ...beeFlat.derivati, haPenaleRecesso: false } }).voto;
+  it("riconosce le frasi che escludono il deposito", () => {
+    expect(con("Per accettare l'offerta non c'è bisogno di lasciare depositi cauzionali.")).toBe(10);
+    expect(con("SEPA")).toBe(10);
+    expect(con("DEPOSITO CAUZIONALE")).toBe(9);
+  });
+});

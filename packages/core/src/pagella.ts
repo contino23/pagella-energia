@@ -60,7 +60,7 @@ export function votoPrezzo(spesa: number, confrontabili: number[]): VocePagella 
 }
 
 const RE_DEPOSITO = /deposit|cauzion|fideiussion/i;
-const RE_NESSUN_DEPOSITO = /nessun|non (è|e'|viene|sarà) richiest|non prevede|non richiede/i;
+const RE_NESSUN_DEPOSITO = /nessun|non (è|e'|viene|sarà) richiest|non prevede|non richiede|non c'è bisogno|non (è|e') necessari|^\s*(no|sepa)\s*$/i;
 
 export function votoVincoli(o: Offerta): VocePagella {
   let v = 10;
