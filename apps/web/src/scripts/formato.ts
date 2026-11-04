@@ -43,6 +43,7 @@ export function h(x: unknown): string {
 }
 
 export const ICONE = {
+  birra: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 11h1a3 3 0 0 1 0 6h-1"></path><path d="M5 8h12v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"></path><path d="M6 8a2.5 2.5 0 0 1 1.5-4.5c.9 0 1.6.4 2 1A3 3 0 0 1 15 5a2 2 0 0 1 2 2v1"></path><path d="M9 12v5"></path><path d="M13 12v5"></path></svg>',
   fulmine: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg>',
   fiamma: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22c4 0 7-3 7-7 0-4-3-6-4-10-2 2-3 4-3 6-1-1-2-2-2-4-2 2-5 5-5 8 0 4 3 7 7 7z"></path></svg>',
   spunta: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>',

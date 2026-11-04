@@ -1,13 +1,17 @@
 ---
 import Base from "../layouts/Base.astro";
 import { Content } from "../../../../docs/METODOLOGIA.md";
+import { DONAZIONI_URL } from "../config";
 ---
 <Base titolo="Come calcoliamo · Pagella Energia" descrizione="Fonti dei dati, stima della spesa annua e formula del voto di Pagella Energia." pagina="metodo">
   <div class="wrap">
     <article class="testo-lungo">
       <Content />
       <h2 id="sostieni">Sostieni il progetto</h2>
-      <p>Pagella Energia è gratuito, senza pubblicità e senza commissioni dai venditori, ed è sostenuto solo dalle donazioni di chi lo usa. Il modo per donare sarà attivo a breve.</p>
+      <p>Pagella Energia è gratuito, senza pubblicità e senza commissioni dai venditori, ed è sostenuto solo dalle donazioni di chi lo usa. Se ti ha fatto risparmiare, offrimi una birra: copre i costi e il tempo per tenere i dati aggiornati ogni giorno.</p>
+      {DONAZIONI_URL
+        ? <p><a class="birra" href={DONAZIONI_URL} target="_blank" rel="noopener" data-donazione>Offrimi una birra</a></p>
+        : <p><em>Il pulsante per donare sarà attivo a breve.</em></p>}
     </article>
   </div>
 </Base>

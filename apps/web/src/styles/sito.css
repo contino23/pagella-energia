@@ -169,3 +169,22 @@ img { max-width: 100%; }
 .perche summary { cursor: pointer; font-weight: 700; font-size: 15px; }
 .perche[open] summary { margin-bottom: 10px; }
 .perche h3 { display: none; }
+
+/* ---------- Donazioni: "Offrimi una birra" ---------- */
+.birra { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 10px; background: var(--birra); color: var(--ink); font-weight: 800; text-decoration: none; box-shadow: 0 1px 0 rgba(13, 17, 23, 0.18); transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.menu a.birra { padding: 0 16px; }
+.birra:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(245, 159, 0, 0.35); }
+.birra:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.birra svg { flex: none; }
+.banner-birra { position: fixed; right: 20px; bottom: 20px; z-index: 50; width: min(380px, calc(100vw - 32px)); display: flex; gap: 14px; align-items: flex-start; padding: 18px 18px 18px 16px; background: var(--birra-tint); color: var(--on-birra); border: 1.5px solid var(--birra); border-radius: var(--radius-lg); box-shadow: 0 12px 32px rgba(13, 17, 23, 0.18); opacity: 0; transform: translateY(16px); transition: opacity 0.25s ease, transform 0.25s ease; }
+.banner-birra.visibile { opacity: 1; transform: none; }
+.banner-birra-icona { flex: none; width: 44px; height: 44px; border-radius: 12px; background: var(--birra); color: var(--ink); display: flex; align-items: center; justify-content: center; }
+.banner-birra-testo { display: flex; flex-direction: column; gap: 6px; font-size: 14.5px; line-height: 1.45; padding-right: 18px; }
+.banner-birra-testo strong { font-size: 16px; color: var(--ink); }
+.banner-birra-azioni { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-top: 6px; }
+.banner-birra-no { border: 0; background: none; padding: 8px 0; font: inherit; font-weight: 600; color: var(--on-birra); text-decoration: underline; cursor: pointer; }
+.banner-birra-x { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border: 0; background: none; font-size: 22px; line-height: 1; color: var(--on-birra); cursor: pointer; border-radius: 8px; }
+.banner-birra-x:hover { background: rgba(77, 48, 0, 0.08); }
+@media (max-width: 560px) { .banner-birra { left: 16px; right: 16px; bottom: 16px; width: auto; } }
+@media (prefers-reduced-motion: reduce) { .banner-birra, .birra { transition: none; } }
+.banner-birra[hidden] { display: none; }
