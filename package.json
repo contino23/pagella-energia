@@ -6,12 +6,15 @@
   "type": "module",
   "workspaces": [
     "packages/*",
-    "pipeline"
+    "pipeline",
+    "apps/*"
   ],
   "scripts": {
     "leggi": "npm run leggi --workspace pipeline --",
     "test": "npm test --workspace pipeline",
-    "typecheck": "tsc -p packages/core && tsc -p pipeline"
+    "typecheck": "tsc -p packages/core && tsc -p pipeline",
+    "sito": "npm run build --workspace apps/web",
+    "dati-web": "npm run esporta-web --workspace pipeline"
   },
   "engines": {
     "node": ">=22"

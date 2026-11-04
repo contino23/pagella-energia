@@ -1,0 +1,277 @@
+/**
+ * Pagina risultati: legge i dati dal # dell'indirizzo (o dal modulo), calcola nel browser
+ * la classifica con @pagella/core e disegna le schede. Nessun dato lascia il dispositivo.
+ */
+import { classifica, valutaOfferta, ZONA_CLIMATICA_TIPICA, type Offerta, type ProfiloClassifica, type RisultatoOfferta } from "@pagella/core";
+import { collegaCaricatore } from "./bolletta.js";
+import { caricaComuni, caricaMercato, caricaOfferte, type Comune, type Mercato } from "./dati.js";
+import { classeVoto, descriviPrezzo, dominio, euro, h, ICONE, nomeLeggibile, numero, prezzoKwh, voto } from "./formato.js";
+
+type Filtro = "tutte" | "fisso" | "variabile" | "pulite";
+interface Stato {
+  c: "luce" | "gas";
+  cons: number;
+  kw: number;
+  res: boolean;
+  comune?: string;
+  zona: "B" | "C" | "D" | "E" | "F";
+  cod?: string;
+  spesa?: number;
+  letti: string[];
+}
+
+const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
+const form = $<HTMLFormElement>("#dati");
+let mercato: Mercato, offerte: Offerta[], comuni: Comune[];
+let risultati: RisultatoOfferta[] = [];
+let tua: RisultatoOfferta | null = null;
+let riferimento: number | null = null;
+let filtro: Filtro = "tutte";
+let mostrate = 10;
+
+function leggiHash(): Stato {
+  const p = new URLSearchParams(location.hash.slice(1));
+  const c = p.get("c") === "gas" ? "gas" : "luce";
+  const num = (k: string, d: number) => (Number(p.get(k)) > 0 ? Number(p.get(k)) : d);
+  const s: Stato = {
+    c,
+    cons: num("cons", c === "gas" ? 1400 : 2700),
+    kw: num("kw", 3),
+    res: p.get("res") !== "0",
+    zona: (p.get("zona") as Stato["zona"]) || "D",
+    letti: (p.get("letti") ?? "").split(",").filter(Boolean),
+  };
+  const comune = p.get("comune"), cod = p.get("cod"), spesa = Number(p.get("spesa"));
+  if (comune) s.comune = comune;
+  if (cod) s.cod = cod.toUpperCase();
+  if (spesa > 0) s.spesa = spesa;
+  return s;
+}
+
+function scriviHash(s: Stato) {
+  const p = new URLSearchParams({ c: s.c, cons: String(s.cons), res: s.res ? "1" : "0" });
+  if (s.c === "luce") p.set("kw", String(s.kw));
+  else p.set("zona", s.zona);
+  if (s.comune) p.set("comune", s.comune);
+  if (s.cod) p.set("cod", s.cod);
+  if (s.spesa) p.set("spesa", String(s.spesa));
+  history.replaceState(null, "", `#${p.toString()}`);
+}
+
+const etichettaComune = (c: Comune) => `${c.nome} (${c.sigla})`;
+
+function riempiModulo(s: Stato) {
+  (form.elements.namedItem(s.c) as HTMLInputElement).checked = true;
+  (form.elements.namedItem("cons") as HTMLInputElement).value = String(s.cons);
+  (form.elements.namedItem("kw") as HTMLInputElement).value = String(s.kw).replace(".", ",");
+  (form.elements.namedItem("res") as HTMLInputElement).checked = s.res;
+  (form.elements.namedItem("zona") as HTMLSelectElement).value = s.zona;
+  (form.elements.namedItem("cod") as HTMLInputElement).value = s.cod ?? "";
+  (form.elements.namedItem("spesa") as HTMLInputElement).value = s.spesa ? String(s.spesa) : "";
+  const com = comuni.find((c) => c.codice === s.comune);
+  (form.elements.namedItem("comune") as HTMLInputElement).value = com ? etichettaComune(com) : "";
+  aggiornaCampi(s.c);
+}
+
+function aggiornaCampi(c: "luce" | "gas") {
+  document.querySelectorAll<HTMLElement>("[data-solo]").forEach((el) => (el.hidden = el.dataset.solo !== c));
+  $("#unita").textContent = c === "gas" ? "Smc" : "kWh";
+}
+
+function leggiModulo(): Stato {
+  const v = (n: string) => (form.elements.namedItem(n) as HTMLInputElement).value.trim();
+  const c = (form.elements.namedItem("gas") as HTMLInputElement).checked ? "gas" : "luce";
+  const n = (x: string) => Number(x.replace(/\./g, "").replace(",", "."));
+  const testoComune = v("comune").toLowerCase();
+  const com = comuni.find((x) => etichettaComune(x).toLowerCase() === testoComune) ?? comuni.find((x) => x.nome.toLowerCase() === testoComune);
+  const s: Stato = { c, cons: n(v("cons")) || (c === "gas" ? 1400 : 2700), kw: n(v("kw")) || 3, res: (form.elements.namedItem("res") as HTMLInputElement).checked, zona: v("zona") as Stato["zona"], letti: [] };
+  if (com) s.comune = com.codice;
+  if (v("cod")) s.cod = v("cod").toUpperCase();
+  if (n(v("spesa")) > 0) s.spesa = n(v("spesa"));
+  return s;
+}
+
+function profiloDa(s: Stato): ProfiloClassifica {
+  const com = comuni.find((c) => c.codice === s.comune);
+  const luogo = com ? { comune: com.codice, provincia: com.provincia, regione: com.regione } : undefined;
+  if (s.c === "luce") return { commodity: "luce", luce: { consumoAnnuoKwh: s.cons, potenzaKw: s.kw, residente: s.res }, ...(luogo ? { luogo } : {}) };
+  return { commodity: "gas", gas: { consumoAnnuoSmc: s.cons, regione: com?.regione ?? "09", zonaClimatica: s.zona }, ...(luogo ? { luogo } : {}) };
+}
+
+/* ---------- disegno ---------- */
+
+function htmlAvvisi(r: RisultatoOfferta): string {
+  if (r.avvisi.length === 0) return `<div class="pe-ok">${ICONE.spunta}Nessuna penale, nessun costo extra</div>`;
+  const warn = r.avvisi.filter((a) => a.tipo === "warn");
+  const info = r.avvisi.filter((a) => a.tipo === "info");
+  return `<div class="avvisi">${warn.length ? `<div class="pe-alert pe-alert-warn">${ICONE.attenzione}<span>${warn.map((a) => `<strong>${h(a.titolo)}</strong> ${h(a.testo)}`).join("<br>")}</span></div>` : ""}${info.map((a) => `<div class="pe-alert pe-alert-info">${ICONE.salita}<span><strong>${h(a.titolo)}</strong> ${h(a.testo)}</span></div>`).join("")}</div>`;
+}
+
+function htmlNumeri(r: RisultatoOfferta): string {
+  const spesa = r.stima.totale;
+  let primo = "";
+  if (riferimento !== null) {
+    const diff = riferimento - spesa;
+    primo = diff >= 1
+      ? `<div class="pe-figure pe-figure-save"><span class="pe-figure-label">Risparmi all'anno</span><span class="pe-figure-value">${euro(diff)}</span></div>`
+      : `<div class="pe-figure"><span class="pe-figure-label">Rispetto alla tua</span><span class="pe-figure-value">+${euro(-diff)}</span></div>`;
+  }
+  return `<div class="pe-figures"${riferimento === null ? ' style="grid-template-columns:repeat(2,minmax(0,1fr))"' : ""}>${primo}<div class="pe-figure"><span class="pe-figure-label">Spesa annua</span><span class="pe-figure-value">${euro(spesa)}</span></div><div class="pe-figure"><span class="pe-figure-label">Al mese</span><span class="pe-figure-value">${euro(spesa / 12)}</span></div></div>`;
+}
+
+function htmlPagella(r: RisultatoOfferta): string {
+  const nomi: Record<string, string> = { prezzo: "Prezzo", vincoli: "Vincoli", trasparenza: "Trasparenza", affidabilita: "Venditore" };
+  const pesi: Record<string, string> = { prezzo: "60%", vincoli: "20%", trasparenza: "10%", affidabilita: "10%" };
+  const righe = r.pagella.voci.map((v) =>
+    v.voto === null
+      ? `<span class="pe-report-muted">${nomi[v.voce]} <span class="pe-report-weight">${pesi[v.voce]}</span></span><div class="pe-report-pending"></div><span class="pe-report-muted" style="font-size:12px;text-align:right">presto</span>`
+      : `<span>${nomi[v.voce]} <span class="pe-report-weight">${pesi[v.voce]}</span></span><div class="pe-meter"><div class="pe-meter-fill ${v.voto >= 6 ? "good" : "warn"}" style="width:${v.voto * 10}%"></div></div><span class="pe-report-score">${voto(v.voto)}</span>`,
+  ).join("");
+  const motivi = r.pagella.voci.filter((v) => v.voto !== null).flatMap((v) => v.motivi);
+  return `<div><h3>Pagella</h3><div class="pe-report">${righe}</div><ul class="motivi">${motivi.map((m) => `<li>${h(m)}</li>`).join("")}</ul></div>`;
+}
+
+function htmlPrezzo(r: RisultatoOfferta): string {
+  const v = Object.fromEntries(r.stima.voci.map((x) => [x.voce, x.importo]));
+  const energia = v.energia ?? 0;
+  const venditore = (v.commercializzazione ?? 0) + (v.una_tantum ?? 0) + (v.sconti ?? 0);
+  const rete = (v.dispacciamento ?? 0) + (v.rete ?? 0) + (v.oneri ?? 0);
+  const imposte = (v.accise ?? 0) + (v.iva ?? 0);
+  const unita = r.offerta.commodity === "gas" ? "Smc" : "kWh";
+  const parti = [energia, Math.max(venditore, 0), rete, imposte];
+  const colori = ["var(--ink)", "#5b6675", "#aeb8c4", "#dce2e8"];
+  const sito = r.offerta.contatti.urlOfferta || r.offerta.contatti.sito;
+  const link = sito ? `<a class="collegamento" href="${h(sito.startsWith("http") ? sito : `https://${sito}`)}" target="_blank" rel="noopener noreferrer">Vai all'offerta sul sito del venditore ${ICONE.esterno}</a>` : "";
+  return `<div><h3>Il prezzo spiegato</h3><div class="barra-prezzo" role="img" aria-label="Composizione della spesa annua">${parti.map((p, i) => `<div style="flex:${Math.max(p, 0.01)};background:${colori[i]}"></div>`).join("")}</div>
+  <div class="voce-prezzo"><span>Energia · ${prezzoKwh(r.stima.prezzoMedioEnergiaKwh, unita)}</span><strong>${euro(energia)}</strong></div>
+  <div class="voce-prezzo"><span>Costi del venditore</span><strong>${euro(venditore)}</strong></div>
+  <div class="voce-prezzo tenue"><span>Rete e oneri, uguali per tutti</span><span>${euro(rete)}</span></div>
+  <div class="voce-prezzo tenue"><span>Imposte</span><span>${euro(imposte)}</span></div>
+  <p class="fonte" style="margin:8px 0 12px">Codice offerta ${h(r.offerta.codice)}</p>${link}</div>`;
+}
+
+function htmlScheda(r: RisultatoOfferta, pos: number, aperta: boolean): string {
+  const o = r.offerta;
+  const venditore = dominio(o.contatti.sito);
+  return `<article class="pe-card${aperta ? " pe-card-top" : ""}" style="border-radius:var(--radius-lg);padding:18px 22px">
+    <div class="scheda-larga">
+      <div class="nome"><span class="pe-card-rank">#${pos}</span><span class="pe-card-name">${h(nomeLeggibile(o.nome))}</span><span class="pe-card-sub">${h(descriviPrezzo(o))}${venditore ? ` · ${h(venditore)}` : ""}</span></div>
+      ${htmlNumeri(r)}
+      <span class="pe-grade ${classeVoto(r.pagella.voto)}"${aperta ? "" : ' style="font-size:28px"'}>${voto(r.pagella.voto)}</span>
+    </div>
+    ${htmlAvvisi(r)}
+    ${aperta ? `<div class="dettagli">${htmlPagella(r)}${htmlPrezzo(r)}</div>` : `<button type="button" class="filtro altre" data-apri="${h(o.codice)}" style="align-self:flex-start">Vedi pagella e prezzo spiegato</button>`}
+  </article>`;
+}
+
+let aperte = new Set<string>();
+
+function filtrati(): RisultatoOfferta[] {
+  return risultati.filter((r) =>
+    filtro === "fisso" ? r.offerta.prezzo === "fisso" : filtro === "variabile" ? r.offerta.prezzo === "variabile" : filtro === "pulite" ? r.avvisi.every((a) => a.tipo !== "warn") : true,
+  );
+}
+
+function disegnaLista() {
+  const lista = filtrati();
+  $("#conteggio").textContent = `${numero(risultati.length)} confrontate · ordinate per voto`;
+  $("#lista").innerHTML = lista.length
+    ? lista.slice(0, mostrate).map((r, i) => htmlScheda(r, i + 1, i === 0 || aperte.has(r.offerta.codice))).join("")
+    : `<div class="vuoto">Nessuna offerta con questo filtro per i tuoi dati.</div>`;
+  const altre = $("#altre");
+  altre.hidden = lista.length <= mostrate;
+  altre.textContent = `Mostra altre ${Math.min(10, lista.length - mostrate)} offerte`;
+}
+
+function disegnaTua(s: Stato) {
+  const box = $("#tua-offerta");
+  const risp = $("#risparmio");
+  const icona = s.c === "luce" ? ICONE.fulmine : ICONE.fiamma;
+  const chip = s.letti.length
+    ? `<span class="pe-chip pe-chip-${s.c}" style="align-self:flex-start">${icona}Bolletta ${s.c} letta</span><span style="font-size:13px;color:var(--ink-muted);margin-top:-4px">Abbiamo trovato: ${h(s.letti.join(", "))}. Controlla i dati qui sotto.</span>`
+    : `<span class="pe-chip pe-chip-${s.c}" style="align-self:flex-start">${icona}${s.c === "luce" ? "Luce" : "Gas"}</span>`;
+  if (tua) {
+    const o = tua.offerta;
+    box.innerHTML = `${chip}<span class="occhiello">Il voto della tua offerta</span>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px"><div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:22px;font-weight:800">${h(nomeLeggibile(o.nome))}</span><span style="font-size:14px;color:var(--ink-muted)">${h(descriviPrezzo(o))}</span></div><span><span class="pe-grade ${classeVoto(tua.pagella.voto)}" style="font-size:40px">${voto(tua.pagella.voto)}</span><span class="pe-grade-of">/10</span></span></div>
+      <div class="pe-meter" role="img" aria-label="Voto ${voto(tua.pagella.voto)} su 10"><div class="pe-meter-fill ${tua.pagella.voto >= 6 ? "good" : "warn"}" style="width:${tua.pagella.voto * 10}%"></div></div>
+      <div class="pe-figures" style="grid-template-columns:repeat(2,minmax(0,1fr))"><div class="pe-figure"><span class="pe-figure-label">Spendi all'anno</span><span class="pe-figure-value">${euro(tua.stima.totale)}</span></div><div class="pe-figure"><span class="pe-figure-label">Al mese</span><span class="pe-figure-value">${euro(tua.stima.totale / 12)}</span></div></div>
+      ${tua.avvisi.length ? htmlAvvisi(tua) : ""}`;
+  } else if (s.cod) {
+    box.innerHTML = `${chip}<span class="occhiello">La tua offerta</span><p style="margin:0;font-size:15px;line-height:1.5">Il codice <strong>${h(s.cod)}</strong> non è tra le offerte pubblicate oggi sul Portale Offerte: probabilmente non è più in vendita. Per vedere quanto risparmi, scrivi quanto spendi all'anno nel modulo qui sotto.</p>`;
+  } else {
+    box.innerHTML = `${chip}<span class="occhiello">La tua offerta</span><p style="margin:0;font-size:15px;line-height:1.5">Carica la bolletta o scrivi il codice offerta per vedere il voto della tua offerta e quanto risparmi.</p>`;
+  }
+  const migliore = risultati[0];
+  if (migliore && riferimento !== null) {
+    const diff = riferimento - migliore.stima.totale;
+    risp.hidden = false;
+    risp.innerHTML = diff >= 1
+      ? `<span class="pe-saving-label">Con la prima in classifica risparmi</span><span class="pe-saving-value">${euro(diff)}<small> l'anno</small></span><span class="pe-saving-sub">cioè ${euro(diff / 12)} in meno ogni mese</span>`
+      : `<span class="pe-saving-label">La tua offerta è tra le più convenienti</span><span class="pe-saving-sub">Per i tuoi consumi nessuna offerta con un voto migliore costa meno.</span>`;
+  } else risp.hidden = true;
+}
+
+function calcola(s: Stato) {
+  const profilo = profiloDa(s);
+  risultati = classifica(offerte, profilo, mercato.parametri, mercato.scenari);
+  const propria = s.cod ? offerte.find((o) => o.codice === s.cod) : undefined;
+  tua = propria ? valutaOfferta(propria, profilo, mercato.parametri, mercato.scenari, risultati) : null;
+  if (tua) risultati = risultati.filter((r) => r.offerta.codice !== tua!.offerta.codice);
+  riferimento = tua ? tua.stima.totale : s.spesa ?? null;
+  mostrate = 10;
+  aperte = new Set();
+  disegnaTua(s);
+  disegnaLista();
+  const ind = s.c === "luce" ? "PUN" : "PSV";
+  const val = mercato.scenari.centrale.valori[ind];
+  const com = comuni.find((c) => c.codice === s.comune);
+  $("#fonte").textContent = `Stima per ${numero(s.cons)} ${s.c === "gas" ? "Smc" : "kWh"} l'anno${s.c === "luce" ? `, ${String(s.kw).replace(".", ",")} kW, ${s.res ? "residente" : "non residente"}` : `, zona climatica ${s.zona}`}${com ? `, ${com.nome}` : ", offerte disponibili in tutta Italia"}. Variabili stimate con ${ind} ${val ? prezzoKwh(val, s.c === "gas" ? "Smc" : "kWh") : "n.d."}, ${mercato.scenari.centrale.descrizione.toLowerCase()}. Fonte: Portale Offerte ARERA, dati del ${new Date(mercato.data).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}.`;
+}
+
+async function avvia() {
+  $("#lista").innerHTML = `<div class="vuoto">Sto confrontando le offerte sul tuo dispositivo…</div>`;
+  [mercato, offerte, comuni] = await Promise.all([caricaMercato(), caricaOfferte(), caricaComuni()]);
+  const lista = $<HTMLDataListElement>("#elenco-comuni");
+  lista.innerHTML = comuni.map((c) => `<option value="${h(etichettaComune(c))}"></option>`).join("");
+  const s = leggiHash();
+  const com = comuni.find((c) => c.codice === s.comune);
+  if (com && !new URLSearchParams(location.hash.slice(1)).get("zona")) s.zona = ZONA_CLIMATICA_TIPICA[com.regione] ?? "D";
+  riempiModulo(s);
+  calcola(s);
+
+  form.addEventListener("change", (e) => {
+    const t = e.target as HTMLInputElement;
+    if (t.name === "commodity") {
+      aggiornaCampi(t.value as "luce" | "gas");
+      (form.elements.namedItem("cons") as HTMLInputElement).value = t.value === "gas" ? "1400" : "2700";
+      (form.elements.namedItem("cod") as HTMLInputElement).value = "";
+    }
+  });
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const nuovo = leggiModulo();
+    scriviHash(nuovo);
+    calcola(nuovo);
+    $("#lista").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+  });
+  document.querySelectorAll<HTMLButtonElement>("[data-filtro]").forEach((b) =>
+    b.addEventListener("click", () => {
+      filtro = b.dataset.filtro as Filtro;
+      document.querySelectorAll("[data-filtro]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      mostrate = 10;
+      disegnaLista();
+    }),
+  );
+  $("#altre").addEventListener("click", () => { mostrate += 10; disegnaLista(); });
+  $("#lista").addEventListener("click", (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-apri]");
+    if (b) { aperte.add(b.dataset.apri!); disegnaLista(); }
+  });
+  window.addEventListener("hashchange", () => { const n = leggiHash(); riempiModulo(n); calcola(n); });
+}
+
+collegaCaricatore($("#caricatore"), $<HTMLInputElement>("#file"), $("#stato"));
+avvia().catch((err) => {
+  $("#lista").innerHTML = `<div class="vuoto">Non siamo riusciti a caricare le offerte di oggi. Ricarica la pagina tra qualche minuto. (${h(err instanceof Error ? err.message : err)})</div>`;
+});

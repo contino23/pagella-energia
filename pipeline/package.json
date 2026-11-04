@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "leggi": "tsx src/cli.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "esporta-web": "tsx src/esporta-web.ts ../data/fotografie/$(ls ../data/fotografie | tail -1)/offerte.json.gz ../data/indici/prezzi-storici-indici.csv ../data/riferimenti/comuni.json ../apps/web/public/dati"
   },
   "dependencies": {
     "@pagella/core": "0.1.0",

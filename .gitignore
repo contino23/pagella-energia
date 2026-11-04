@@ -2,3 +2,7 @@ node_modules/
 data/raw/
 *.log
 .DS_Store
+apps/web/dist/
+apps/web/.astro/
+apps/web/public/dati/
+apps/web/src/styles/tokens.css

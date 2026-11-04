@@ -1,0 +1,85 @@
+---
+import Base from "../layouts/Base.astro";
+import { ICONE } from "../scripts/formato";
+---
+<Base titolo="Confronta le offerte · Pagella Energia" descrizione="Il voto della tua offerta luce o gas e tutte le alternative del mercato libero, con risparmio annuo e mensile." pagina="risultati">
+  <div class="wrap risultati">
+    <aside class="laterale">
+      <section class="riquadro" id="tua-offerta" aria-live="polite"></section>
+      <section class="pe-saving" id="risparmio" hidden aria-live="polite"></section>
+
+      <form class="riquadro" id="dati" novalidate>
+        <h2>I tuoi dati</h2>
+        <span style="font-size:13px;color:var(--ink-muted);margin-top:-6px">Restano su questo dispositivo. Correggili se serve.</span>
+        <fieldset style="border:0;margin:0;padding:0">
+          <legend class="sr">Luce o gas</legend>
+          <div class="pe-tabs">
+            <label class="pe-tab pe-tab-luce" style="position:relative"><input type="radio" name="commodity" id="luce" value="luce" class="sr" />
+              <span set:html={`${ICONE.fulmine}Luce`} style="display:flex;gap:6px;align-items:center" /></label>
+            <label class="pe-tab pe-tab-gas" style="position:relative"><input type="radio" name="commodity" id="gas" value="gas" class="sr" />
+              <span set:html={`${ICONE.fiamma}Gas`} style="display:flex;gap:6px;align-items:center" /></label>
+          </div>
+        </fieldset>
+        <label class="campo" for="cons"><span>Consumo annuo (<span id="unita">kWh</span>)</span>
+          <input type="text" inputmode="numeric" id="cons" name="cons" autocomplete="off" />
+          <small>Lo trovi in bolletta, alla voce "consumo annuo".</small>
+        </label>
+        <label class="campo" for="kw" data-solo="luce">Potenza impegnata (kW)
+          <input type="text" inputmode="decimal" id="kw" name="kw" autocomplete="off" />
+        </label>
+        <label class="campo" for="comune">Comune della fornitura
+          <input type="text" id="comune" name="comune" list="elenco-comuni" autocomplete="off" placeholder="Es. Quarrata (PT)" />
+          <small>Serve a includere le offerte locali. Senza comune vedi solo quelle nazionali.</small>
+        </label>
+        <datalist id="elenco-comuni"></datalist>
+        <label class="scelta" for="res" data-solo="luce"><input type="checkbox" id="res" name="res" />Residente nell'abitazione</label>
+        <label class="campo" for="zona" data-solo="gas">Zona climatica
+          <select id="zona" name="zona">
+            <option value="B">B · molto calda</option><option value="C">C · calda</option><option value="D">D · temperata</option><option value="E">E · fredda</option><option value="F">F · molto fredda</option>
+          </select>
+          <small>Proposta in base alla regione: cambiala se la conosci.</small>
+        </label>
+        <label class="campo" for="cod">Codice della tua offerta (facoltativo)
+          <input type="text" id="cod" name="cod" autocomplete="off" spellcheck="false" style="font-size:14px" />
+          <small>Nel riquadro "Box dell'offerta" della bolletta.</small>
+        </label>
+        <label class="campo" for="spesa">Quanto spendi all'anno, in euro (facoltativo)
+          <input type="text" inputmode="numeric" id="spesa" name="spesa" autocomplete="off" />
+        </label>
+        <button type="submit" class="pe-btn" style="height:48px;font-size:16px">Ricalcola</button>
+      </form>
+
+      <section class="riquadro" id="caricatore" style="border-style:dashed;position:relative">
+        <h2>Hai la bolletta in PDF?</h2>
+        <label for="file" class="pe-btn-secondary" style="height:48px;cursor:pointer">Carica la bolletta<input type="file" id="file" accept="application/pdf,.pdf" class="sr" /></label>
+        <p class="stato" id="stato" role="status" aria-live="polite" style="margin:0"></p>
+      </section>
+    </aside>
+
+    <section class="principale" aria-labelledby="titolo-lista">
+      <div class="titolo-risultati">
+        <h1 id="titolo-lista">Offerte per te</h1>
+        <span id="conteggio"></span>
+      </div>
+      <div class="filtri" role="group" aria-label="Filtri">
+        <button type="button" class="filtro" data-filtro="tutte" aria-pressed="true">Tutte</button>
+        <button type="button" class="filtro" data-filtro="fisso" aria-pressed="false">Prezzo fisso</button>
+        <button type="button" class="filtro" data-filtro="variabile" aria-pressed="false">Variabile</button>
+        <button type="button" class="filtro" data-filtro="pulite" aria-pressed="false">Senza penali né costi extra</button>
+      </div>
+      <div id="lista" style="display:flex;flex-direction:column;gap:16px"></div>
+      <button type="button" class="pe-btn-secondary altre" id="altre" hidden>Mostra altre offerte</button>
+      <p class="fonte" id="fonte"></p>
+    </section>
+  </div>
+</Base>
+
+<style is:global>
+  .pe-tab:has(input:checked).pe-tab-luce { background: var(--luce-tint); color: var(--on-luce); box-shadow: 0 1px 2px rgba(13, 17, 23, 0.12); }
+  .pe-tab:has(input:checked).pe-tab-gas { background: var(--gas-tint); color: var(--on-gas); box-shadow: 0 1px 2px rgba(13, 17, 23, 0.12); }
+  .pe-tab:has(input:focus-visible) { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+</style>
+
+<script>
+  import "../scripts/risultati";
+</script>

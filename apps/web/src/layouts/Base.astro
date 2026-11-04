@@ -1,0 +1,46 @@
+---
+import "../styles/tokens.css";
+import "../../../../design/components/bundle.css";
+import "../styles/sito.css";
+
+interface Props { titolo: string; descrizione: string; pagina?: "home" | "risultati" | "metodo" }
+const { titolo, descrizione, pagina } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+---
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{titolo}</title>
+    <meta name="description" content={descrizione} />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" />
+  </head>
+  <body class="pe">
+    <header class="testata">
+      <div class="wrap">
+        <a class="marchio" href={base} aria-label="Pagella Energia, home">
+          <span class="marchio-tessera"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg></span>
+          Pagella Energia
+        </a>
+        <nav class="menu" aria-label="Principale">
+          <a href={`${base}risultati/`} aria-current={pagina === "risultati" ? "page" : undefined}>Confronta le offerte</a>
+          <a href={`${base}metodo/`} aria-current={pagina === "metodo" ? "page" : undefined}>Come calcoliamo</a>
+          <a class="bordo" href={`${base}metodo/#sostieni`}>Sostieni il progetto</a>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer class="piede">
+      <div class="wrap">
+        <span>Servizio gratuito, senza registrazione · Dati aperti del Portale Offerte ARERA · Nessuna commissione dai venditori · Codice open source</span>
+        <a href="https://github.com/contino23/pagella-energia">Il codice su GitHub</a>
+      </div>
+    </footer>
+  </body>
+</html>

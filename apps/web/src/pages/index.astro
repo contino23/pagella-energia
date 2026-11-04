@@ -1,0 +1,110 @@
+---
+import { readFileSync } from "node:fs";
+import Base from "../layouts/Base.astro";
+import { descriviPrezzo, euro, numero, nomeLeggibile, prezzoKwh, voto, classeVoto, ICONE } from "../scripts/formato";
+
+const mercato = JSON.parse(readFileSync(new URL("../../public/dati/mercato.json", import.meta.url), "utf8"));
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+const dataLunga = new Date(mercato.data).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
+const mesiCorti = ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"];
+const meseCorto = (m: string) => `${mesiCorti[Number(m.slice(5, 7)) - 1]} ${m.slice(0, 4)}`;
+
+function barre(chiave: "PUN" | "PSV") {
+  const valori = mercato.indici.map((r: any) => r[chiave] ?? 0);
+  const max = Math.max(...valori);
+  return valori.map((v: number, i: number) => ({ altezza: Math.round((v / max) * 100), ora: i >= valori.length - 3 }));
+}
+const sezioni = [
+  { id: "luce", titolo: "Luce", icona: ICONE.fulmine, profilo: `${numero(mercato.famigliaTipo.luce.consumoAnnuoKwh)} kWh l'anno · ${mercato.famigliaTipo.luce.potenzaKw} kW · residente`, indice: "PUN", unita: "kWh" as const, nomeIndice: "PUN, prezzo all'ingrosso", migliori: mercato.migliori.luce },
+  { id: "gas", titolo: "Gas", icona: ICONE.fiamma, profilo: `${numero(mercato.famigliaTipo.gas.consumoAnnuoSmc)} Smc l'anno · riscaldamento e cucina`, indice: "PSV", unita: "Smc" as const, nomeIndice: "PSV, prezzo all'ingrosso", migliori: mercato.migliori.gas },
+];
+const periodo = mercato.scenari.centrale.descrizione.replace(/^Media /, "").replace(/ (\d{4}) – /, " – ");
+---
+<Base titolo="Pagella Energia" descrizione="Diamo un voto alla tua bolletta della luce e del gas e ti mostriamo le offerte per risparmiare. Gratis, senza registrazione." pagina="home">
+  <div class="wrap">
+    <section class="eroe">
+      <div class="eroe-testo">
+        <div class="etichette">
+          <span class="pe-chip pe-chip-luce" set:html={`${ICONE.fulmine}Luce`} />
+          <span class="pe-chip pe-chip-gas" set:html={`${ICONE.fiamma}Gas`} />
+          <span class="aggiornato"><span class="pallino"></span>Dati aggiornati al {dataLunga}</span>
+        </div>
+        <h1>Diamo un voto alla tua bolletta e ti mostriamo le offerte per risparmiare.</h1>
+        <p class="intro">Carica la bolletta della luce o del gas, riconosciamo noi quale è: vedi subito il voto della tua offerta e tutte le alternative del mercato libero, con quanto risparmi all'anno e al mese.</p>
+        <div class="azioni">
+          <label class="pe-btn" for="file" style="cursor:pointer">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"></path><path d="m6 10 6-6 6 6"></path><path d="M4 20h16"></path></svg>
+            Carica la bolletta
+          </label>
+          <a class="pe-btn-secondary" href={`${base}risultati/`}>Inserisci i dati a mano</a>
+        </div>
+        <ul class="garanzie">
+          <li set:html={`${ICONE.spunta}<span><strong>Gratis</strong> per tutti</span>`} />
+          <li set:html={`${ICONE.spunta}<span><strong>Nessuna registrazione</strong>, nessuna email</span>`} />
+          <li set:html={`${ICONE.spunta}<span>La bolletta <strong>resta sul tuo dispositivo</strong></span>`} />
+        </ul>
+      </div>
+      <div class="caricatore" id="caricatore">
+        <div class="caricatore-icona"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5"></path><path d="M9 13h6"></path><path d="M9 17h4"></path></svg></div>
+        <strong>Trascina qui la bolletta</strong>
+        <p>PDF della bolletta luce o gas. Resta sul tuo computer: la leggiamo nel browser e non viene mai caricata su un server.</p>
+        <label for="file">oppure scegli un file<input type="file" id="file" accept="application/pdf,.pdf" /></label>
+        <p class="stato" id="stato" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+  </div>
+
+  <section class="fascia" aria-labelledby="migliori">
+    <div class="wrap">
+      <div class="intesta-sezione">
+        <div>
+          <h2 id="migliori">Le migliori di oggi in tutta Italia</h2>
+          <p>Offerte disponibili ovunque, con il voto più alto per una famiglia tipo.</p>
+        </div>
+        <span style="font-size:14px;color:var(--ink-muted)"><strong style="color:var(--ink)">{numero(mercato.conteggi.offerte)}</strong> offerte di {mercato.conteggi.venditori} venditori · aggiornato il {dataLunga}</span>
+      </div>
+      <div class="colonne">
+        {sezioni.map((s) => (
+          <section class={`classifica classifica-${s.id}`} aria-labelledby={`classifica-${s.id}`}>
+            <div class="classifica-testa">
+              <h3 id={`classifica-${s.id}`}><span class="tessera" set:html={s.icona.replace('width="16" height="16"', 'width="20" height="20"')} />{s.titolo}</h3>
+              <span>{s.profilo}</span>
+            </div>
+            {s.migliori.map((m: any, i: number) => (
+              <div class="riga">
+                <span class="riga-pos">{i + 1}</span>
+                <div class="riga-nome"><strong>{nomeLeggibile(m.nome)}</strong><span>{descriviPrezzo({ prezzo: m.prezzo, durataMesi: m.durataMesi, commodity: s.id })}{m.avvisi === 0 ? " · nessuna penale" : ""}</span></div>
+                <div class="riga-spesa">{euro(m.spesaAnnua)}/anno<span>{euro(m.spesaAnnua / 12)}/mese</span></div>
+                <span class={`pe-grade ${classeVoto(m.voto)}`}>{voto(m.voto)}</span>
+              </div>
+            ))}
+            <figure class={`pe-chart pe-chart-${s.id}`} style="margin:0">
+              <figcaption class="pe-chart-head"><span>{s.nomeIndice}</span><span>{prezzoKwh(mercato.scenari.centrale.valori[s.indice], s.unita)} <span style="font-weight:500;color:var(--ink-muted)">media {periodo}</span></span></figcaption>
+              <div class="pe-chart-bars" role="img" aria-label={`${s.indice} mensile da ${meseCorto(mercato.indici[0].mese)} a ${meseCorto(mercato.indici.at(-1).mese)}`}>
+                {barre(s.indice as "PUN" | "PSV").map((b: any) => <span class={b.ora ? "now" : ""} style={`height:${b.altezza}%`}></span>)}
+              </div>
+              <div class="pe-chart-foot"><span>{meseCorto(mercato.indici[0].mese)}</span><span>{meseCorto(mercato.indici.at(-1).mese)}</span></div>
+            </figure>
+          </section>
+        ))}
+      </div>
+      <p class="nota">Il risparmio per te dipende dai tuoi consumi e dalla tua zona, dove spesso ci sono offerte locali ancora più convenienti: carica la bolletta per il calcolo esatto.</p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <section class="passi" aria-labelledby="come">
+      <h2 id="come">Come funziona</h2>
+      <ol>
+        <li><strong>Carichi la bolletta</strong><span>Codice offerta e consumi vengono letti sul tuo dispositivo: la bolletta non lascia mai il tuo computer o telefono.</span></li>
+        <li><strong>Confrontiamo tutto il mercato</strong><span>Stimiamo la spesa di ogni offerta disponibile nel tuo comune, con le regole del Portale Offerte.</span></li>
+        <li><strong>Vedi il voto e le alternative</strong><span>Per ogni offerta: quanto risparmi, spesa annua e mensile, e un avviso se ci sono penali o costi extra.</span></li>
+      </ol>
+    </section>
+  </div>
+</Base>
+
+<script>
+  import { collegaCaricatore } from "../scripts/bolletta";
+  collegaCaricatore(document.getElementById("caricatore")!, document.getElementById("file") as HTMLInputElement, document.getElementById("stato")!);
+</script>
