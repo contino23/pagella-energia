@@ -1,0 +1,60 @@
+# Costruisce l'APK Android di prova e lo pubblica come release "app-anteprima",
+# scaricabile direttamente dal telefono. Firma di debug: non è la versione per il Play Store.
+name: App Android
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/mobile/**"
+      - "packages/core/**"
+      - "design/tokens.json"
+      - ".github/workflows/app-android.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: app-android
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm ci
+      - name: Controllo dei tipi
+        working-directory: apps/mobile
+        run: npx tsc --noEmit
+      - name: Genera il progetto Android
+        working-directory: apps/mobile
+        run: npx expo prebuild --platform android --no-install
+      - name: Compila l'APK
+        working-directory: apps/mobile/android
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+      - name: Pubblica l'anteprima
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          APK=pagella-energia-anteprima.apk
+          cp apps/mobile/android/app/build/outputs/apk/release/app-release.apk "$APK"
+          NOTE="APK di prova costruito dal commit ${GITHUB_SHA::7} il $(TZ=Europe/Rome date '+%d/%m/%Y %H:%M'). Firma di debug: si installa solo a mano, non è la versione per il Play Store."
+          gh release delete app-anteprima --yes --cleanup-tag 2>/dev/null || true
+          gh release create app-anteprima "$APK" --title "App Android – anteprima" --notes "$NOTE" --prerelease --target "$GITHUB_SHA"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: pagella-energia-anteprima.apk
+          retention-days: 14

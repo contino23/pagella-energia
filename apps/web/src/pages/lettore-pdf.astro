@@ -1,0 +1,42 @@
+---
+/**
+ * Pagina tecnica per l'app: l'app la apre in una WebView invisibile e le passa il PDF della bolletta.
+ * Il testo viene estratto qui, sul telefono, con pdf.js e restituito all'app. Nessun invio a server.
+ */
+---
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Lettore PDF · Pagella Energia</title>
+  </head>
+  <body>
+    <p>Pagina usata dall'app Pagella Energia per leggere le bollette sul telefono.</p>
+    <script>
+      import { testoDaPdf } from "../scripts/bolletta";
+
+      type Messaggio = { id: string; tipo: "pagina" | "testo" | "errore" | "pronto"; pagina?: number; totale?: number; testo?: string; errore?: string };
+      const invia = (m: Messaggio) => (window as any).ReactNativeWebView?.postMessage(JSON.stringify(m));
+
+      function daBase64(b64: string): Uint8Array {
+        const bin = atob(b64);
+        const out = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+        return out;
+      }
+
+      (window as any).leggiPdf = async ({ id, base64 }: { id: string; base64: string }) => {
+        try {
+          const file = new File([daBase64(base64)], "bolletta.pdf", { type: "application/pdf" });
+          const testo = await testoDaPdf(file, (pagina, totale) => invia({ id, tipo: "pagina", pagina, totale }));
+          invia({ id, tipo: "testo", testo });
+        } catch (e) {
+          invia({ id, tipo: "errore", errore: e instanceof Error ? e.message : String(e) });
+        }
+      };
+      invia({ id: "", tipo: "pronto" });
+    </script>
+  </body>
+</html>

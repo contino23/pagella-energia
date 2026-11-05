@@ -270,7 +270,7 @@ function disegnaTua(s: Stato) {
   if (migliore && riferimento !== null) {
     const diff = riferimento - migliore.stima.totale;
     risp.hidden = false;
-    risp.innerHTML = diff >= 1
+    risp.innerHTML = diff >= 12
       ? `<span class="pe-saving-label">Con la prima in classifica risparmi</span><span class="pe-saving-value">${euro(diff)}<small> l'anno</small></span><span class="pe-saving-sub">cioè ${euro(diff / 12)} in meno ogni mese</span>`
       : `<span class="pe-saving-label">La tua offerta è tra le più convenienti</span><span class="pe-saving-sub">Per i tuoi consumi nessuna offerta con un voto migliore costa meno.</span>`;
   } else risp.hidden = true;
