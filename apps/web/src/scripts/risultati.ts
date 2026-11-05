@@ -144,7 +144,7 @@ function htmlNumeri(r: RisultatoOfferta): string {
   if (riferimento !== null) {
     const diff = riferimento - spesa;
     primo = diff >= 1
-      ? `<div class="pe-figure pe-figure-save"><span class="pe-figure-label">Risparmi all'anno</span><span class="pe-figure-value">${euro(diff)}</span></div>`
+      ? `<div class="pe-figure pe-figure-save"><span class="pe-figure-label">Risparmio annuo</span><span class="pe-figure-value">${euro(diff)}</span></div>`
       : `<div class="pe-figure"><span class="pe-figure-label">Rispetto alla tua</span><span class="pe-figure-value">+${euro(-diff)}</span></div>`;
   }
   return `<div class="pe-figures"${riferimento === null ? ' style="grid-template-columns:repeat(2,minmax(0,1fr))"' : ""}>${primo}<div class="pe-figure"><span class="pe-figure-label">Spesa annua</span><span class="pe-figure-value">${euro(spesa)}</span></div><div class="pe-figure"><span class="pe-figure-label">Al mese</span><span class="pe-figure-value">${euro(spesa / 12)}</span></div></div>`;
@@ -204,7 +204,9 @@ function htmlScheda(r: RisultatoOfferta, pos: number, aperta: boolean): string {
 let aperte = new Set<string>();
 /** La prima scheda è aperta di partenza: qui finisce se l'utente la chiude. */
 let chiuse = new Set<string>();
-const eAperta = (codice: string, i: number) => aperte.has(codice) || (i === 0 && !chiuse.has(codice));
+/** Su telefono la prima scheda parte chiusa: la lista resta compatta e si scorre meglio. */
+const stretto = () => matchMedia("(max-width: 560px)").matches;
+const eAperta = (codice: string, i: number) => aperte.has(codice) || (i === 0 && !chiuse.has(codice) && !stretto());
 
 function filtrati(): RisultatoOfferta[] {
   return risultati.filter((r) =>
@@ -242,7 +244,7 @@ function disegnaTua(s: Stato) {
   const chip = `<span class="pe-chip pe-chip-${s.c}" style="align-self:flex-start">${icona}${s.letti.length ? `Bolletta ${s.c} letta` : s.c === "luce" ? "Luce" : "Gas"}</span>`;
   const spesaBolletta = s.bolletta?.spesaAnnua;
   const notaSpesa = spesaBolletta && tua
-    ? `<p class="nota-tua">Nell'ultimo anno hai speso <strong>${euro(spesaBolletta)}</strong> (dato della bolletta). La spesa qui sopra invece è la stima per i prossimi 12 mesi ai prezzi di oggi, calcolata come per tutte le altre offerte.</p>`
+    ? `<p class="nota-tua">Nell'ultimo anno hai speso <strong>${euro(spesaBolletta)}</strong>. Qui sopra c'è la stima dei prossimi 12 mesi ai prezzi di oggi, come per le altre offerte.</p>`
     : "";
   if (tua) {
     const o = tua.offerta;
@@ -250,7 +252,7 @@ function disegnaTua(s: Stato) {
       ? "Non più in vendita: voto calcolato con i prezzi letti nella tua bolletta"
       : "Condizioni ufficiali dal Portale Offerte";
     box.innerHTML = `${chip}<span class="occhiello">Il voto della tua offerta</span>
-      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px"><div style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="font-size:22px;font-weight:800;overflow-wrap:anywhere">${h(nomeLeggibile(o.nome))}</span><span style="font-size:14px;color:var(--ink-muted)">${h(descriviPrezzo(o))}</span></div>${htmlVoto(tua.pagella.voto)}</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px"><div style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="font-size:22px;font-weight:800;overflow-wrap:anywhere">${h(nomeLeggibile(o.nome))}</span>${origine === "bolletta" ? `<span style="font-size:14px;color:var(--ink-muted)">Prezzi letti in bolletta</span>` : ""}</div>${htmlVoto(tua.pagella.voto)}</div>
       ${htmlMetro(tua.pagella.voto)}
       <strong style="font-size:15px">${h(giudizio(tua.pagella.voto))}</strong>
       ${htmlFatti(tua, true, origine === "bolletta" ? s.bolletta?.quotaFissaMese : undefined)}
@@ -310,6 +312,8 @@ function calcola(s: Stato) {
   const ind = s.c === "luce" ? "PUN" : "PSV";
   const val = mercato.scenari.centrale.valori[ind];
   const com = comuni.find((c) => c.codice === s.comune);
+  const vai = $("#vai-dati");
+  vai.innerHTML = `<span>${h(numero(s.cons))} ${s.c === "gas" ? "Smc" : "kWh"}${s.c === "luce" ? ` · ${h(String(s.kw).replace(".", ","))} kW` : ` · zona ${h(s.zona)}`}${com ? ` · ${h(com.nome)}` : " · tutta Italia"}</span><strong>Modifica</strong>`;
   $("#fonte").textContent = `Stima per ${numero(s.cons)} ${s.c === "gas" ? "Smc" : "kWh"} l'anno${s.c === "luce" ? `, ${String(s.kw).replace(".", ",")} kW, ${s.res ? "residente" : "non residente"}` : `, zona climatica ${s.zona}`}${com ? `, ${com.nome}` : ", offerte disponibili in tutta Italia"}. Variabili stimate con ${ind} ${val ? prezzoKwh(val, s.c === "gas" ? "Smc" : "kWh") : "n.d."}, ${mercato.scenari.centrale.descrizione.toLowerCase()}. Fonte: Portale Offerte ARERA, dati del ${new Date(mercato.data).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}.`;
 }
 
