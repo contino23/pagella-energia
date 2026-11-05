@@ -1,5 +1,5 @@
 /** Formati e piccoli aiuti condivisi tra le pagine. */
-import type { Offerta } from "@pagella/core";
+import type { Offerta, RisultatoOfferta } from "@pagella/core";
 
 /** Numeri all'italiana con il punto delle migliaia anche a 4 cifre (1.166, non 1166). */
 const fmtIntero = new Intl.NumberFormat("it-IT", { maximumFractionDigits: 0, useGrouping: "always" as unknown as boolean });
@@ -51,3 +51,24 @@ export const ICONE = {
   salita: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17 9 11l4 4 8-8"></path><path d="M14 7h7v7"></path></svg>',
   esterno: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"></path><path d="M8 7h9v9"></path></svg>',
 };
+
+const dec = (x: number, n: number) => x.toLocaleString("it-IT", { minimumFractionDigits: n, maximumFractionDigits: n });
+
+/** I tre dati "a colpo d'occhio" di un'offerta: prezzo dell'energia, quota fissa, tipo di prezzo. */
+export function fattiOfferta(r: RisultatoOfferta, quotaLetta?: number): Array<{ etichetta: string; valore: string; nota?: string }> {
+  const o = r.offerta;
+  const u = o.commodity === "gas" ? "Smc" : "kWh";
+  const indice = o.commodity === "gas" ? "PSV" : "PUN";
+  const si = r.stima.sintesi;
+  const variabile = si.spreadUnita !== undefined;
+  const prezzo = variabile
+    ? { etichetta: "Prezzo energia", valore: `${indice} + ${dec(si.spreadUnita!, 3)}`, nota: `€/${u} · oggi circa ${dec(si.prezzoUnita, 3)}` }
+    : { etichetta: "Prezzo energia", valore: dec(si.prezzoUnita, 3), nota: `€/${u}` };
+  const q = Math.round((quotaLetta ?? si.quotaFissaMese) * 100) / 100;
+  const quota = { etichetta: "Quota fissa", valore: Number.isInteger(q) ? String(q) : dec(q, 2), nota: "€/mese" };
+  const tipo = o.prezzo === "variabile" ? { valore: "Variabile", nota: "cambia ogni mese" }
+    : o.prezzo === "misto" ? { valore: "Misto", nota: "in parte fisso" }
+    : o.durataMesi && o.durataMesi < 99 ? { valore: "Fisso", nota: `bloccato ${o.durataMesi} mesi` }
+    : { valore: "Fisso", nota: "durata indeterminata" };
+  return [prezzo, quota, { etichetta: "Tipo di prezzo", ...tipo }];
+}

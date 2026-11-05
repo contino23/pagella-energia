@@ -44,6 +44,17 @@ export interface StimaSpesa {
   prezzoMedioEnergiaKwh: number;
   avvisi: string[];
   calcolabile: boolean;
+  /** I tre numeri "a colpo d'occhio" della scheda, IVA e imposte escluse. */
+  sintesi: SintesiPrezzo;
+}
+
+export interface SintesiPrezzo {
+  /** Prezzo medio dell'energia per unità (€/kWh o €/Smc): per le variabili include l'indice dello scenario. */
+  prezzoUnita: number;
+  /** Solo variabili: quanto il venditore aggiunge all'indice, per unità. */
+  spreadUnita?: number;
+  /** Quota fissa del venditore, € al mese. */
+  quotaFissaMese: number;
 }
 
 const QUOTE_DOMESTICO = { F1: 0.33, F2: 0.31, F3: 0.36 };
@@ -119,6 +130,8 @@ export function stimaSpesaLuce(o: Offerta, profilo: ProfiloLuce, parametri: Para
   // ---------- Energia (§3.3.1): componenti macroarea 04 (prezzo) e 06 (verde) ----------
   let energia = 0;
   let energiaKwh = 0; // solo parte a consumo, per il prezzo medio
+  let quotaIndice = 0;
+  let fissaVenditore = 0; // €/anno di quote fisse del venditore
   const compEnergia = o.componenti.filter((c) => c.ruolo === "energia" || c.ruolo === "energia_verde");
 
   if (o.prezzo === "variabile" || o.prezzo === "misto") {
@@ -129,7 +142,7 @@ export function stimaSpesaLuce(o: Offerta, profilo: ProfiloLuce, parametri: Para
       calcolabile = false;
     } else {
       const coeff = o.indice?.coefficiente ?? 1;
-      const quotaIndice = idx * coeff * (1 + lambda) * C;
+      quotaIndice = idx * coeff * (1 + lambda) * C;
       energia += quotaIndice;
       energiaKwh += quotaIndice;
     }
@@ -148,8 +161,8 @@ export function stimaSpesaLuce(o: Offerta, profilo: ProfiloLuce, parametri: Para
           energiaKwh += p.valore * kwh;
           break;
         }
-        case "EUR_ANNO": if (fascia === "F0" || fascia === "F1") energia += p.valore; break;
-        case "EUR_KW_ANNO": if (fascia === "F0" || fascia === "F1") energia += p.valore * pot; break;
+        case "EUR_ANNO": if (fascia === "F0" || fascia === "F1") { energia += p.valore; fissaVenditore += p.valore; } break;
+        case "EUR_KW_ANNO": if (fascia === "F0" || fascia === "F1") { energia += p.valore * pot; fissaVenditore += p.valore * pot; } break;
         case "EUR": break; // una tantum in macroarea energia: non previsto, ignorato
         default: avvisi.push(`Unità ${p.unita} inattesa in "${c.nome}"`);
       }
@@ -166,8 +179,8 @@ export function stimaSpesaLuce(o: Offerta, profilo: ProfiloLuce, parametri: Para
       if (!p) continue;
       const solaVolta = fascia === "F0" || fascia === "F1";
       switch (p.unita) {
-        case "EUR_ANNO": if (solaVolta) commercializzazione += p.valore; break;
-        case "EUR_KW_ANNO": if (solaVolta) commercializzazione += p.valore * pot; break;
+        case "EUR_ANNO": if (solaVolta) { commercializzazione += p.valore; fissaVenditore += p.valore; } break;
+        case "EUR_KW_ANNO": if (solaVolta) { commercializzazione += p.valore * pot; fissaVenditore += p.valore * pot; } break;
         case "EUR": if (solaVolta) unaTantum += p.valore; break;
         case "EUR_KWH": {
           const kwh = consumoFascia(fascia, cons);
@@ -179,7 +192,7 @@ export function stimaSpesaLuce(o: Offerta, profilo: ProfiloLuce, parametri: Para
       }
     }
   }
-  if (o.componentiRegolate.includes("01")) commercializzazione += P("pcv_c");
+  if (o.componentiRegolate.includes("01")) { commercializzazione += P("pcv_c"); fissaVenditore += P("pcv_c"); }
 
   // ---------- Dispacciamento (§3.3.3) ----------
   let dispacciamento = 0;
@@ -266,6 +279,11 @@ export function stimaSpesaLuce(o: Offerta, profilo: ProfiloLuce, parametri: Para
     prezzoMedioEnergiaKwh: C > 0 ? Math.round((energiaKwh / C) * 1e5) / 1e5 : 0,
     avvisi,
     calcolabile,
+    sintesi: {
+      prezzoUnita: C > 0 ? Math.round((energiaKwh / C) * 1e5) / 1e5 : 0,
+      ...(o.prezzo === "variabile" || o.prezzo === "misto" ? { spreadUnita: C > 0 ? Math.round(((energiaKwh - quotaIndice) / C) * 1e5) / 1e5 : 0 } : {}),
+      quotaFissaMese: Math.round((fissaVenditore / 12) * 100) / 100,
+    },
   };
 }
 

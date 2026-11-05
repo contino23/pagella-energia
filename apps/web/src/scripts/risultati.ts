@@ -5,7 +5,7 @@
 import { classifica, offertaDaBolletta, valutaOfferta, votoPrezzo, ZONA_CLIMATICA_TIPICA, type DatiBolletta, type Offerta, type ProfiloClassifica, type RisultatoOfferta, type VocePagella } from "@pagella/core";
 import { collegaCaricatore } from "./bolletta.js";
 import { caricaComuni, caricaMercato, caricaOfferte, type Comune, type Mercato } from "./dati.js";
-import { classeVoto, descriviPrezzo, dominio, euro, h, ICONE, nomeLeggibile, numero, prezzoKwh, voto } from "./formato.js";
+import { classeVoto, descriviPrezzo, dominio, euro, fattiOfferta, h, ICONE, nomeLeggibile, numero, prezzoKwh, voto } from "./formato.js";
 
 type Filtro = "tutte" | "fisso" | "variabile" | "pulite";
 interface Stato {
@@ -181,15 +181,20 @@ function htmlPrezzo(r: RisultatoOfferta): string {
   <p class="fonte" style="margin:8px 0 12px">Codice offerta ${h(r.offerta.codice)}</p>${link}</div>`;
 }
 
+function htmlFatti(r: RisultatoOfferta, colonna = false, quotaLetta?: number): string {
+  return `<dl class="fatti${colonna ? " fatti-colonna" : ""}">${fattiOfferta(r, quotaLetta).map((f) => `<div><dt>${h(f.etichetta)}</dt><dd>${h(f.valore)}${f.nota ? `<small>${h(f.nota)}</small>` : ""}</dd></div>`).join("")}</dl>`;
+}
+
 function htmlScheda(r: RisultatoOfferta, pos: number, aperta: boolean): string {
   const o = r.offerta;
   const venditore = dominio(o.contatti.sito);
   return `<article class="pe-card${aperta ? " pe-card-top" : ""}" style="border-radius:var(--radius-lg);padding:18px 22px">
-    <div class="scheda-larga">
-      <div class="nome"><span class="pe-card-rank">#${pos}</span><span class="pe-card-name">${h(nomeLeggibile(o.nome))}</span><span class="pe-card-sub">${h(descriviPrezzo(o))}${venditore ? ` · ${h(venditore)}` : ""}</span></div>
-      ${htmlNumeri(r)}
-      <span class="pe-grade ${classeVoto(r.pagella.voto)}"${aperta ? "" : ' style="font-size:28px"'}>${voto(r.pagella.voto)}</span>
+    <div class="scheda-testa">
+      <div class="nome"><span class="pe-card-rank">#${pos}</span><span class="pe-card-name">${h(nomeLeggibile(o.nome))}</span>${venditore ? `<span class="pe-card-sub">${h(venditore)}</span>` : ""}</div>
+      <span class="pe-grade ${classeVoto(r.pagella.voto)}"${aperta ? "" : ' style="font-size:30px"'}>${voto(r.pagella.voto)}</span>
     </div>
+    ${htmlFatti(r)}
+    ${htmlNumeri(r)}
     ${htmlAvvisi(r)}
     ${aperta ? `<div class="dettagli">${htmlPagella(r)}${htmlPrezzo(r)}</div>` : ""}
     <button type="button" class="filtro altre" data-scheda="${h(o.codice)}" aria-expanded="${aperta}" style="align-self:flex-start">${aperta ? "Nascondi pagella e prezzo spiegato" : "Vedi pagella e prezzo spiegato"}</button>
@@ -248,6 +253,7 @@ function disegnaTua(s: Stato) {
       <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px"><div style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="font-size:22px;font-weight:800;overflow-wrap:anywhere">${h(nomeLeggibile(o.nome))}</span><span style="font-size:14px;color:var(--ink-muted)">${h(descriviPrezzo(o))}</span></div>${htmlVoto(tua.pagella.voto)}</div>
       ${htmlMetro(tua.pagella.voto)}
       <strong style="font-size:15px">${h(giudizio(tua.pagella.voto))}</strong>
+      ${htmlFatti(tua, true, origine === "bolletta" ? s.bolletta?.quotaFissaMese : undefined)}
       <div class="pe-figures" style="grid-template-columns:repeat(2,minmax(0,1fr))"><div class="pe-figure"><span class="pe-figure-label">Spesa annua stimata</span><span class="pe-figure-value">${euro(tua.stima.totale)}</span></div><div class="pe-figure"><span class="pe-figure-label">Al mese</span><span class="pe-figure-value">${euro(tua.stima.totale / 12)}</span></div></div>
       ${notaSpesa}
       ${tua.avvisi.length ? htmlAvvisi(tua) : ""}

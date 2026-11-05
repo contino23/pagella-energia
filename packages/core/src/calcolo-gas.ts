@@ -104,6 +104,9 @@ export function stimaSpesaGas(o: Offerta, profilo: ProfiloGas, parametri: Parame
 
   // ---------- Energia (§4.3.1) ----------
   let energia = 0;
+  let fissaVenditore = 0;
+  let quotaIndice = 0;
+  let fissaEnergia = 0;
   if (o.prezzo === "variabile" || o.prezzo === "misto") {
     const col = o.indice ? COLONNA_INDICE_GAS[o.indice.codice] : undefined;
     const coeff = o.indice?.coefficiente ?? 1;
@@ -111,8 +114,10 @@ export function stimaSpesaGas(o: Offerta, profilo: ProfiloGas, parametri: Parame
     if (col && mensile && Object.keys(mensile).length === 12) {
       const pesi = pesiMensiliGas(profilo);
       for (let m = 1; m <= 12; m++) energia += C * pesi[m]! * mensile[m]! * coeff;
+      quotaIndice = energia;
     } else if (col && indici.valori[col] !== undefined) {
       energia += C * indici.valori[col]! * coeff;
+      quotaIndice = energia;
     } else {
       avvisi.push(`Indice ${o.indice?.codice ?? "assente"} non disponibile: spesa energia non calcolabile`);
       calcolabile = false;
@@ -124,7 +129,7 @@ export function stimaSpesaGas(o: Offerta, profilo: ProfiloGas, parametri: Parame
     if (p.unita === "EUR_SMC") {
       if (p.valore > 5) { avvisi.push(`Prezzo fuori scala in "${c.nome}": ${p.valore} €/Smc`); calcolabile = false; }
       energia += p.valore * C;
-    } else if (p.unita === "EUR_ANNO") energia += p.valore;
+    } else if (p.unita === "EUR_ANNO") { energia += p.valore; fissaVenditore += p.valore; fissaEnergia += p.valore; }
     else avvisi.push(`Unità ${p.unita} inattesa in "${c.nome}"`);
   }
   const energiaVolume = energia;
@@ -140,13 +145,13 @@ export function stimaSpesaGas(o: Offerta, profilo: ProfiloGas, parametri: Parame
     const p = prezzoEffettivo(c.prezzi, C);
     if (!p) continue;
     switch (p.unita) {
-      case "EUR_ANNO": commercializzazione += p.valore; break;
+      case "EUR_ANNO": commercializzazione += p.valore; fissaVenditore += p.valore; break;
       case "EUR": unaTantum += p.valore; break;
       case "EUR_SMC": commercializzazione += p.valore * C; break;
       default: avvisi.push(`Unità ${p.unita} inattesa in "${c.nome}"`);
     }
   }
-  if (o.componentiRegolate.includes("09")) commercializzazione += P("qvd_f_d");
+  if (o.componentiRegolate.includes("09")) { commercializzazione += P("qvd_f_d"); fissaVenditore += P("qvd_f_d"); }
   if (["04", "05", "10"].some((k) => o.componentiRegolate.includes(k))) commercializzazione += P("qvd_v_d") * C;
 
   // ---------- Trasporto e gestione contatore (§4.1.2), contatore < G6 ----------
@@ -219,6 +224,11 @@ export function stimaSpesaGas(o: Offerta, profilo: ProfiloGas, parametri: Parame
     prezzoMedioEnergiaKwh: C > 0 ? Math.round((energiaVolume / C) * 1e5) / 1e5 : 0, // per il gas è €/Smc
     avvisi,
     calcolabile,
+    sintesi: {
+      prezzoUnita: C > 0 ? Math.round(((energiaVolume - fissaEnergia) / C) * 1e5) / 1e5 : 0,
+      ...(o.prezzo === "variabile" || o.prezzo === "misto" ? { spreadUnita: C > 0 ? Math.round(((energiaVolume - fissaEnergia - quotaIndice) / C) * 1e5) / 1e5 : 0 } : {}),
+      quotaFissaMese: Math.round((fissaVenditore / 12) * 100) / 100,
+    },
   };
 }
 

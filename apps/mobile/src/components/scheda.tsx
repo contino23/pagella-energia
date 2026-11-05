@@ -3,7 +3,7 @@ import { memo, useState } from "react";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import type { RisultatoOfferta } from "@pagella/core";
 import { C, F, R, tabellari } from "../lib/tema";
-import { descriviPrezzo, dominio, euro, nomeLeggibile, prezzoUnita, voto } from "../lib/formato";
+import { dominio, euro, fattiOfferta, nomeLeggibile, prezzoUnita, voto } from "../lib/formato";
 import { Avviso, Cifra, coloreVoto, Metro, T, Tenue, Voto } from "./ui";
 
 const NOMI: Record<string, string> = { prezzo: "Prezzo", vincoli: "Vincoli", trasparenza: "Trasparenza", affidabilita: "Venditore" };
@@ -14,6 +14,37 @@ export function Avvisi({ r }: { r: RisultatoOfferta }) {
   return (
     <View style={{ gap: 8 }}>
       {r.avvisi.map((a, i) => <Avviso key={i} tipo={a.tipo} titolo={a.titolo} testo={a.testo} />)}
+    </View>
+  );
+}
+
+/** Prezzo, quota fissa e tipo di prezzo: in riga nelle schede, in colonna nel riquadro della tua offerta. */
+export function Fatti({ r, colonna, quotaLetta }: { r: RisultatoOfferta; colonna?: boolean; quotaLetta?: number }) {
+  const fatti = fattiOfferta(r, quotaLetta);
+  if (colonna) {
+    return (
+      <View style={st.fattiBox}>
+        {fatti.map((f, i) => (
+          <View key={f.etichetta} style={[st.fattoRiga, i > 0 && { borderTopWidth: 1, borderTopColor: C.line }]}>
+            <Text style={st.fattoEtichetta}>{f.etichetta}</Text>
+            <View style={{ alignItems: "flex-end", flexShrink: 1 }}>
+              <Text style={st.fattoValore}>{f.valore}</Text>
+              {f.nota ? <Text style={st.fattoNota}>{f.nota}</Text> : null}
+            </View>
+          </View>
+        ))}
+      </View>
+    );
+  }
+  return (
+    <View style={[st.fattiBox, { flexDirection: "row" }]}>
+      {fatti.map((f, i) => (
+        <View key={f.etichetta} style={[st.fattoCella, i > 0 && { borderLeftWidth: 1, borderLeftColor: C.line }]}>
+          <Text style={st.fattoEtichetta}>{f.etichetta}</Text>
+          <Text style={st.fattoValore} adjustsFontSizeToFit numberOfLines={1}>{f.valore}</Text>
+          {f.nota ? <Text style={st.fattoNota}>{f.nota}</Text> : null}
+        </View>
+      ))}
     </View>
   );
 }
@@ -82,10 +113,11 @@ function SchedaBase({ r, pos, riferimento }: { r: RisultatoOfferta; pos: number;
         <View style={{ flex: 1, gap: 3 }}>
           <Text style={st.pos}>#{pos}</Text>
           <Text style={st.nome}>{nomeLeggibile(o.nome)}</Text>
-          <Tenue numberOfLines={2}>{descriviPrezzo(o)}{venditore ? ` · ${venditore}` : ""}</Tenue>
+          {venditore ? <Tenue numberOfLines={1}>{venditore}</Tenue> : null}
         </View>
         <Voto v={r.pagella.voto} />
       </View>
+      <Fatti r={r} />
       <View style={st.cifre}>
         {diff !== null ? (diff >= 1 ? <Cifra etichetta="Risparmi/anno" valore={euro(diff)} risparmio /> : <Cifra etichetta="Rispetto alla tua" valore={`+${euro(-diff)}`} />) : null}
         <Cifra etichetta="Spesa annua" valore={euro(spesa)} />
@@ -128,6 +160,12 @@ const st = StyleSheet.create({
   rigaValore: { fontFamily: F.bold, fontSize: 14.5, color: C.ink, ...tabellari },
   link: { minHeight: 44, justifyContent: "center" },
   linkTesto: { fontFamily: F.bold, fontSize: 15, color: C.ink, textDecorationLine: "underline" },
+  fattiBox: { borderWidth: 1, borderColor: C.line, borderRadius: R.sm, overflow: "hidden" },
+  fattoCella: { flex: 1, paddingVertical: 9, paddingHorizontal: 10, gap: 1 },
+  fattoRiga: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 12, paddingVertical: 10, paddingHorizontal: 12 },
+  fattoEtichetta: { fontFamily: F.medium, fontSize: 12, color: C.inkMuted },
+  fattoValore: { fontFamily: F.extrabold, fontSize: 17, color: C.ink, ...tabellari },
+  fattoNota: { fontFamily: F.regular, fontSize: 11.5, color: C.inkMuted },
   apri: { alignSelf: "flex-start", minHeight: 40, paddingHorizontal: 14, borderRadius: R.pill, borderWidth: 1.5, borderColor: C.lineStrong, justifyContent: "center" },
   apriTesto: { fontFamily: F.semibold, fontSize: 14, color: C.ink },
 });

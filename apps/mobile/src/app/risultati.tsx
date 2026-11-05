@@ -3,7 +3,7 @@ import type { RisultatoOfferta } from "@pagella/core";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
-import { Avvisi, Pagella } from "../components/scheda";
+import { Avvisi, Fatti, Pagella } from "../components/scheda";
 import { Scheda } from "../components/scheda";
 import { Caricamento, Chip, Cifra, Metro, Occhiello, Pulsante, Riquadro, T, Tenue, Voto } from "../components/ui";
 import { calcola, type Esito } from "../lib/calcolo";
@@ -130,6 +130,7 @@ function TuaOfferta({ esito, perche, setPerche }: { esito: Esito; perche: boolea
         </View>
         <Metro v={tua.pagella.voto} />
         <T style={{ fontFamily: F.bold }}>{giudizio(tua.pagella.voto)}</T>
+        <Fatti r={tua} colonna quotaLetta={esito.origine === "bolletta" ? p.bolletta?.quotaFissaMese : undefined} />
         <View style={{ flexDirection: "row", gap: 8 }}>
           <Cifra etichetta="Spesa annua stimata" valore={euro(tua.stima.totale)} />
           <Cifra etichetta="Al mese" valore={euro(tua.stima.totale / 12)} />
