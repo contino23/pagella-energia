@@ -45,6 +45,13 @@ Per un giro a mano: `docker compose exec raccoglitore aggiorna.sh`.
 
 ## Controllo
 
+**Uptime Kuma (consigliato).** Due monitor:
+
+1. *Sito*: tipo **HTTP(s) - Keyword**, URL del sito, parola chiave `Pagella Energia`, intervallo 300 secondi.
+2. *Dati*: tipo **Push**, intervallo di heartbeat **90000 secondi** (25 ore), tentativi 0. Copia l'indirizzo Push nel file `.env` come `KUMA_PUSH_URL=...` e riavvia con `docker compose up -d`. Dopo ogni giro il raccoglitore manda "up" con l'esito, oppure "down" subito se il giro fallisce. Se per 25 ore non arriva niente (container fermo o server spento), Kuma va in allarme da solo.
+
+Altri controlli:
+
 - `docker ps` mostra il container *unhealthy* se l'ultimo aggiornamento riuscito ha più di 36 ore.
 - Su GitHub, nella cronologia dei commit, compare un "Dati del …" al giorno.
 
