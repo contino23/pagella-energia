@@ -8,6 +8,9 @@ Ogni scelta è dichiarata; quando cambia, cambia qui.
 - Offerte e parametri regolati: file open data del Portale Offerte (ARERA / Acquirente Unico),
   aggiornati ogni giorno. Riuso libero citando la fonte "Portale Offerte".
 - Prezzi storici degli indici (PUN, PSV, PSBIL, CMEM, PE): file open data del Portale Offerte.
+- Aggiornamento automatico due volte al giorno (circa alle 9:20 e alle 14:20): scarichiamo i file,
+  li controlliamo e pubblichiamo i dati solo se tutti i controlli passano. Altrimenti restano
+  quelli del giorno prima. La data dei dati è sempre indicata sul sito e nell'app.
 - Accise e addizionali regionali del gas: tabelle ufficiali vigenti, aggiornate a mano (ultimo
   aggiornamento: ottobre 2026), perché non sono negli open data.
 
@@ -29,11 +32,48 @@ algoritmo del Portale Offerte, con queste differenze:
 5. **Sconti:** il totale principale include solo gli sconti senza condizioni validi nel primo
    anno, come il Portale. Mostriamo a parte la spesa con gli sconti per bolletta online o
    domiciliazione. Gli sconti successivi al primo anno sono segnalati ma non inclusi.
+   Uno sconto limitato a una fascia oraria (F1, F2 o F3) vale solo sui consumi di quella fascia.
 6. **Dati anomali:** offerte con prezzi palesemente errati (es. oltre 1 €/kWh) non entrano in
    classifica e sono segnalate come "dati non affidabili".
 
 Profili di consumo predefiniti: quelli del Portale (luce domestica F1 33%, F2 31%, F3 36%;
 gas: profili di prelievo mensili AU per zona climatica).
+
+## Cosa vedi in ogni scheda
+
+- **Prezzo energia.** Offerte a prezzo fisso: il prezzo medio della materia prima per kWh o Smc,
+  IVA e imposte escluse, come da listino. Offerte variabili: quanto il venditore aggiunge
+  all'indice (es. "PUN + 0,012 €/kWh"), con accanto il valore approssimativo di oggi.
+- **Prezzo con gli sconti.** Se l'offerta ha sconti sul prezzo dell'energia, sotto il listino
+  compare il prezzo scontato: in verde se lo sconto vale per tutti (ed è già nella spesa annua),
+  in blu se serve una condizione (domiciliazione, bolletta online, essere soci…), che indichiamo.
+  Mostriamo solo gli sconti dichiarati al Portale Offerte: le promozioni di altri canali non ci sono.
+- **Quota fissa.** Quanto il venditore chiede ogni mese a prescindere dai consumi; non comprende
+  le quote fisse di rete e oneri, uguali per tutti.
+- **Tipo di prezzo.** Fisso (con i mesi per cui è bloccato) o variabile.
+- **Risparmio, spesa annua e al mese.** Stima per i prossimi 12 mesi con i tuoi consumi e il tuo
+  comune, IVA e imposte comprese. Il risparmio è rispetto alla tua offerta; sotto i 12 € l'anno
+  consideriamo la tua offerta già tra le più convenienti.
+- **Avvisi.** In arancio penali di uscita, depositi, costi una tantum, sconti solo iniziali e
+  servizi aggiuntivi; in blu quanto può variare la rata delle offerte variabili.
+
+## La tua bolletta
+
+La bolletta in PDF viene letta sul tuo dispositivo, nel browser o nell'app, e non viene mai
+inviata a un server. Prima dei risultati mostriamo cosa abbiamo letto, da confermare o correggere.
+Il voto della tua offerta si calcola così:
+
+1. **Offerta ancora in vendita:** la troviamo nel Portale Offerte con il codice della bolletta e
+   usiamo le sue condizioni ufficiali.
+2. **Offerta non più in vendita** (il caso più comune): la ricostruiamo con i prezzi della
+   "spesa per la vendita" stampati in bolletta. Per le variabili, il prezzo pagato meno l'indice
+   dei mesi fatturati dà il ricarico del venditore, che applichiamo all'indice di oggi.
+3. **Mancano anche i prezzi:** voto sul solo prezzo, confrontando la spesa annua indicata in
+   bolletta (o scritta da te) con la spesa stimata delle altre offerte. È un confronto
+   approssimato, e lo diciamo.
+
+La spesa dell'ultimo anno scritta in bolletta può essere diversa dalla nostra stima: la prima
+dipende dai prezzi passati, la seconda dai prezzi di oggi, uguali per tutte le offerte.
 
 ## Il voto
 
