@@ -50,6 +50,20 @@ Per un giro a mano: `docker compose exec raccoglitore aggiorna.sh`.
 1. *Sito*: tipo **HTTP(s) - Keyword**, URL del sito, parola chiave `Pagella Energia`, intervallo 300 secondi.
 2. *Dati*: tipo **Push**, intervallo di heartbeat **90000 secondi** (25 ore), tentativi 0. Copia l'indirizzo Push nel file `.env` come `KUMA_PUSH_URL=...` e riavvia con `docker compose up -d`. Dopo ogni giro il raccoglitore manda "up" con l'esito, oppure "down" subito se il giro fallisce. Se per 25 ore non arriva niente (container fermo o server spento), Kuma va in allarme da solo.
 
+Se Kuma gira sullo stesso server ed è esposto solo su `127.0.0.1`, il container non lo vede all'indirizzo del server. In quel caso si collega il raccoglitore alla rete di Kuma con un file `compose.override.yaml`, che resta solo sul server:
+
+```yaml
+services:
+  raccoglitore:
+    networks: [default, kuma]
+networks:
+  kuma:
+    external: true
+    name: uptime-kuma_default
+```
+
+e nel Push URL si usa `http://uptime-kuma:3001` al posto dell'indirizzo mostrato da Kuma.
+
 Altri controlli:
 
 - `docker ps` mostra il container *unhealthy* se l'ultimo aggiornamento riuscito ha più di 36 ore.
