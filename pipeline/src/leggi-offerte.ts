@@ -213,6 +213,8 @@ function sconti(o: Nodo): Sconto[] {
       }),
     };
     if (condTesto) r.condizioneTesto = condTesto;
+    const cf = s(sc.CODICE_COMPONENTE_FASCIA);
+    if (cf) r.componenteFascia = cf;
     if (durata !== undefined) r.durataMesi = durata;
     const mese = numero(pv.MESE_VALIDITA);
     if (mese !== undefined) r.meseValidita = mese;

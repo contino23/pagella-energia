@@ -13,6 +13,7 @@
  * La funzione è pura e senza dipendenze: gira identica in pipeline, sito e app.
  */
 import type { Componente, Offerta, Parametro, Prezzo } from "./modello.js";
+import { fasciaSconto, scontiPerUnita, type ScontoUnita } from "./sconti-unita.js";
 
 export interface ProfiloLuce {
   consumoAnnuoKwh: number;
@@ -55,6 +56,8 @@ export interface SintesiPrezzo {
   spreadUnita?: number;
   /** Quota fissa del venditore, € al mese. */
   quotaFissaMese: number;
+  /** Sconti sul prezzo dell'energia, per unità (vuoto se non ce ne sono). */
+  sconti: ScontoUnita[];
 }
 
 const QUOTE_DOMESTICO = { F1: 0.33, F2: 0.31, F3: 0.36 };
@@ -226,6 +229,9 @@ export function stimaSpesaLuce(o: Offerta, profilo: ProfiloLuce, parametri: Para
       if (soloIncondizionati && s.condizione !== "NESSUNA") continue;
       if (!soloIncondizionati && s.condizione === "ALTRO") continue; // condizioni non verificabili
       const mesi = s.meseValidita !== undefined ? 1 / 12 : s.durataMesi && s.durataMesi < 12 ? s.durataMesi / 12 : 1;
+      // Sconto limitato a una fascia oraria: vale solo sui consumi di quella fascia.
+      const f = fasciaSconto(s);
+      const quotaFascia = f ? q[f] : 1;
       // Gli importi con validoDa/validoFino sono scaglioni di consumo: vale solo quello che contiene C.
       const importi = s.importi.filter((i) => i.validoDa === undefined && i.validoFino === undefined
         || (C >= (i.validoDa ?? 0) && C <= (i.validoFino ?? Infinity)));
@@ -233,8 +239,8 @@ export function stimaSpesaLuce(o: Offerta, profilo: ProfiloLuce, parametri: Para
         let v = 0;
         if (imp.tipo === "FISSO" && imp.unita === "EUR") v = imp.valore;
         else if (imp.tipo === "FISSO" && imp.unita === "EUR_ANNO") v = imp.valore * mesi;
-        else if (imp.tipo === "VENDITA" && imp.unita === "EUR_KWH") v = imp.valore * C * mesi;
-        else if (imp.tipo === "VENDITA" && imp.unita === "PERCENTUALE") v = (energiaKwh * imp.valore) / 100 * mesi;
+        else if (imp.tipo === "VENDITA" && imp.unita === "EUR_KWH") v = imp.valore * C * quotaFascia * mesi;
+        else if (imp.tipo === "VENDITA" && imp.unita === "PERCENTUALE") v = (energiaKwh * quotaFascia * imp.valore) / 100 * mesi;
         else continue;
         if (s.primaIva) primaIva += v; else dopoIva += v;
       }
@@ -281,6 +287,7 @@ export function stimaSpesaLuce(o: Offerta, profilo: ProfiloLuce, parametri: Para
     calcolabile,
     sintesi: {
       prezzoUnita: C > 0 ? Math.round((energiaKwh / C) * 1e5) / 1e5 : 0,
+      sconti: scontiPerUnita(o, C, C > 0 ? energiaKwh / C : 0, q),
       ...(o.prezzo === "variabile" || o.prezzo === "misto" ? { spreadUnita: C > 0 ? Math.round(((energiaKwh - quotaIndice) / C) * 1e5) / 1e5 : 0 } : {}),
       quotaFissaMese: Math.round((fissaVenditore / 12) * 100) / 100,
     },

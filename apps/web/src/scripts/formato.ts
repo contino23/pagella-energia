@@ -55,15 +55,22 @@ export const ICONE = {
 const dec = (x: number, n: number) => x.toLocaleString("it-IT", { minimumFractionDigits: n, maximumFractionDigits: n });
 
 /** I tre dati "a colpo d'occhio" di un'offerta: prezzo dell'energia, quota fissa, tipo di prezzo. */
-export function fattiOfferta(r: RisultatoOfferta, quotaLetta?: number): Array<{ etichetta: string; valore: string; nota?: string }> {
+export interface Fatto { etichetta: string; valore: string; nota?: string; sconti?: Array<{ testo: string; condizionato: boolean }> }
+
+export function fattiOfferta(r: RisultatoOfferta, quotaLetta?: number): Fatto[] {
   const o = r.offerta;
   const u = o.commodity === "gas" ? "Smc" : "kWh";
   const indice = o.commodity === "gas" ? "PSV" : "PUN";
   const si = r.stima.sintesi;
   const variabile = si.spreadUnita !== undefined;
-  const prezzo = variabile
+  const sconti = si.sconti.map((x) => ({
+    testo: variabile ? `−${dec(x.perUnita, 3)} €/${u} ${x.quando}` : `${dec(si.prezzoUnita - x.perUnita, 3)} €/${u} ${x.quando}`,
+    condizionato: x.condizionato,
+  }));
+  const prezzo: Fatto = variabile
     ? { etichetta: "Prezzo energia", valore: `${indice} + ${dec(si.spreadUnita!, 3)}`, nota: `€/${u} · oggi circa ${dec(si.prezzoUnita, 3)}` }
-    : { etichetta: "Prezzo energia", valore: dec(si.prezzoUnita, 3), nota: `€/${u}` };
+    : { etichetta: "Prezzo energia", valore: dec(si.prezzoUnita, 3), nota: sconti.length ? `€/${u} di listino` : `€/${u}` };
+  if (sconti.length) prezzo.sconti = sconti;
   const q = Math.round((quotaLetta ?? si.quotaFissaMese) * 100) / 100;
   const quota = { etichetta: "Quota fissa", valore: Number.isInteger(q) ? String(q) : dec(q, 2), nota: "€/mese" };
   const tipo = o.prezzo === "variabile" ? { valore: "Variabile", nota: "cambia ogni mese" }

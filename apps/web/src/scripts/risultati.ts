@@ -182,7 +182,7 @@ function htmlPrezzo(r: RisultatoOfferta): string {
 }
 
 function htmlFatti(r: RisultatoOfferta, colonna = false, quotaLetta?: number): string {
-  return `<dl class="fatti${colonna ? " fatti-colonna" : ""}">${fattiOfferta(r, quotaLetta).map((f) => `<div><dt>${h(f.etichetta)}</dt><dd>${h(f.valore)}${f.nota ? `<small>${h(f.nota)}</small>` : ""}</dd></div>`).join("")}</dl>`;
+  return `<dl class="fatti${colonna ? " fatti-colonna" : ""}">${fattiOfferta(r, quotaLetta).map((f) => `<div><dt>${h(f.etichetta)}</dt><dd>${h(f.valore)}${f.nota ? `<small>${h(f.nota)}</small>` : ""}${(f.sconti ?? []).map((x) => `<span class="sconto${x.condizionato ? " cond" : ""}">${h(x.testo)}</span>`).join("")}</dd></div>`).join("")}</dl>`;
 }
 
 function htmlScheda(r: RisultatoOfferta, pos: number, aperta: boolean): string {

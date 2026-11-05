@@ -268,3 +268,8 @@ img { max-width: 100%; }
   .nota-tua { font-size: 13px; }
   .pe-saving-value { font-size: 34px; }
 }
+/* Prezzo con gli sconti, sotto il listino: verde se vale per tutti, blu se a condizione. */
+.fatti .sconto { display: block; margin-top: 6px; padding: 3px 7px; border-radius: 6px; background: var(--good-tint); color: var(--on-good); font-size: 12px; font-weight: 700; line-height: 1.3; letter-spacing: 0; }
+.fatti .sconto.cond { background: var(--info-tint); color: var(--on-info); }
+.fatti-colonna .sconto { text-align: right; }
+@media (max-width: 480px) { .fatti .sconto { font-size: 10.5px; padding: 3px 5px; } }

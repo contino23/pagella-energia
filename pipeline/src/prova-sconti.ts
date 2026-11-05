@@ -1,0 +1,10 @@
+import { readFileSync } from "node:fs";
+import { gunzipSync } from "node:zlib";
+import { classifica, creaScenari, type Fotografia } from "@pagella/core";
+import { leggiIndiciCsv } from "./leggi-indici.js";
+const foto = JSON.parse(gunzipSync(readFileSync("../data/fotografie/2026-11-05/offerte.json.gz")).toString()) as Fotografia;
+const scen = creaScenari(leggiIndiciCsv(readFileSync("../data/indici/prezzi-storici-indici.csv", "utf8")));
+const r = classifica(foto.offerte, { commodity: "luce", luce: { consumoAnnuoKwh: 2700, potenzaKw: 3, residente: true }, luogo: { regione: "09", provincia: "047" } }, foto.parametri, scen);
+const con = r.filter((x) => x.stima.sintesi.sconti.length);
+console.log(`${con.length} offerte su ${r.length} con sconti sul prezzo`);
+for (const x of con.slice(0, 10)) console.log(x.offerta.nome, x.stima.sintesi.prezzoUnita, JSON.stringify(x.stima.sintesi.sconti.map((s) => [s.perUnita, s.condizionato, s.quando])));

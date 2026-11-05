@@ -61,6 +61,8 @@ export interface Sconto {
   durataMesi?: number;
   /** Mese (1–12) dall'attivazione in cui vale lo sconto, se limitato a un solo mese. */
   meseValidita?: number;
+  /** CODICE_COMPONENTE_FASCIA del tracciato: 11/12/13 = sconto solo in fascia F1/F2/F3, altri = componente regolata. */
+  componenteFascia?: string;
 }
 
 export interface Dispacciamento {

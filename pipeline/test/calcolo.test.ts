@@ -85,3 +85,23 @@ describe("scenari", () => {
     expect(f.massimo).toBe(f.centrale.totale);
   });
 });
+
+describe("sconti per fascia oraria", () => {
+  it("uno sconto per fascia F1/F2/F3 vale una volta sola sul totale, non tre", async () => {
+    const { stimaSpesaLuce, scontiPerUnita } = await import("@pagella/core");
+    const { readFileSync } = await import("node:fs");
+    const { gunzipSync } = await import("node:zlib");
+    const foto = JSON.parse(gunzipSync(readFileSync(new URL("../../data/fotografie/2026-11-03/offerte.json.gz", import.meta.url))).toString());
+    const base = foto.offerte.find((o: any) => o.commodity === "luce" && o.prezzo === "fisso" && o.sconti.length === 0 && o.componenti.some((c: any) => c.ruolo === "energia"));
+    const prof = { consumoAnnuoKwh: 2700, potenzaKw: 3, residente: true };
+    const sc = (nome: string, cf: string) => ({ nome, descrizione: "", validita: "INGRESSO", condizione: "NESSUNA", primaIva: true, componenteFascia: cf, importi: [{ tipo: "VENDITA", valore: 0.02, unita: "EUR_KWH" }] });
+    const conFasce = { ...base, sconti: [sc("Sconto F1", "11"), sc("Sconto F2", "12"), sc("Sconto F3", "13")] };
+    const unico = { ...base, sconti: [{ ...sc("Sconto", ""), componenteFascia: undefined }] };
+    const scenario = { valori: {}, descrizione: "" };
+    const a = stimaSpesaLuce(conFasce, prof, foto.parametri.luce, scenario);
+    const b = stimaSpesaLuce(unico, prof, foto.parametri.luce, scenario);
+    expect(a.totale).toBeCloseTo(b.totale, 1);
+    expect(scontiPerUnita(conFasce, 2700, 0.15, { F1: 0.33, F2: 0.31, F3: 0.36 })).toHaveLength(1);
+    expect(scontiPerUnita(conFasce, 2700, 0.15, { F1: 0.33, F2: 0.31, F3: 0.36 })[0]!.perUnita).toBeCloseTo(0.02, 5);
+  });
+});

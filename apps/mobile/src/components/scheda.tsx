@@ -3,7 +3,7 @@ import { memo, useState } from "react";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import type { RisultatoOfferta } from "@pagella/core";
 import { C, F, R, tabellari } from "../lib/tema";
-import { dominio, euro, fattiOfferta, nomeLeggibile, prezzoUnita, voto } from "../lib/formato";
+import { dominio, euro, fattiOfferta, nomeLeggibile, prezzoUnita, voto, type Fatto } from "../lib/formato";
 import { Avviso, Cifra, coloreVoto, Metro, T, Tenue, Voto } from "./ui";
 
 const NOMI: Record<string, string> = { prezzo: "Prezzo", vincoli: "Vincoli", trasparenza: "Trasparenza", affidabilita: "Venditore" };
@@ -30,6 +30,7 @@ export function Fatti({ r, colonna, quotaLetta }: { r: RisultatoOfferta; colonna
             <View style={{ alignItems: "flex-end", flexShrink: 1 }}>
               <Text style={st.fattoValore}>{f.valore}</Text>
               {f.nota ? <Text style={st.fattoNota}>{f.nota}</Text> : null}
+              <EtichetteSconto f={f} />
             </View>
           </View>
         ))}
@@ -43,9 +44,22 @@ export function Fatti({ r, colonna, quotaLetta }: { r: RisultatoOfferta; colonna
           <Text style={st.fattoEtichetta}>{f.etichetta}</Text>
           <Text style={st.fattoValore} adjustsFontSizeToFit numberOfLines={1}>{f.valore}</Text>
           {f.nota ? <Text style={st.fattoNota}>{f.nota}</Text> : null}
+          <EtichetteSconto f={f} />
         </View>
       ))}
     </View>
+  );
+}
+
+/** Prezzo con gli sconti, sotto il listino: verde se vale per tutti, blu se a condizione. */
+function EtichetteSconto({ f }: { f: Fatto }) {
+  if (!f.sconti?.length) return null;
+  return (
+    <>
+      {f.sconti.map((x) => (
+        <Text key={x.testo} style={[st.sconto, x.condizionato && { backgroundColor: C.infoTint, color: C.onInfo }]}>{x.testo}</Text>
+      ))}
+    </>
   );
 }
 
@@ -166,6 +180,7 @@ const st = StyleSheet.create({
   fattoEtichetta: { fontFamily: F.medium, fontSize: 12, color: C.inkMuted },
   fattoValore: { fontFamily: F.extrabold, fontSize: 17, color: C.ink, ...tabellari },
   fattoNota: { fontFamily: F.regular, fontSize: 11.5, color: C.inkMuted },
+  sconto: { marginTop: 5, paddingHorizontal: 5, paddingVertical: 3, borderRadius: 6, backgroundColor: C.goodTint, color: C.onGood, fontFamily: F.bold, fontSize: 10.5, lineHeight: 14, overflow: "hidden" },
   apri: { alignSelf: "flex-start", minHeight: 40, paddingHorizontal: 14, borderRadius: R.pill, borderWidth: 1.5, borderColor: C.lineStrong, justifyContent: "center" },
   apriTesto: { fontFamily: F.semibold, fontSize: 14, color: C.ink },
 });

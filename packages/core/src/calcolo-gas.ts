@@ -10,6 +10,7 @@
  *  - IVA: 10% sulla quota corrispondente ai primi 480 Smc, 22% sul resto (ripartizione proporzionale).
  *  - Accise e addizionali regionali non sono negli open data: tabelle in questo file, aggiornate a ottobre 2026.
  */
+import { scontiPerUnita } from "./sconti-unita.js";
 import { AMBITO_GAS_PER_REGIONE } from "./codici.js";
 import { mappaParametri, prezzoEffettivo, type ScenarioIndici, type StimaSpesa, type VoceSpesa } from "./calcolo-luce.js";
 import type { Offerta, Parametro } from "./modello.js";
@@ -226,6 +227,7 @@ export function stimaSpesaGas(o: Offerta, profilo: ProfiloGas, parametri: Parame
     calcolabile,
     sintesi: {
       prezzoUnita: C > 0 ? Math.round(((energiaVolume - fissaEnergia) / C) * 1e5) / 1e5 : 0,
+      sconti: scontiPerUnita(o, C, C > 0 ? (energiaVolume - fissaEnergia) / C : 0),
       ...(o.prezzo === "variabile" || o.prezzo === "misto" ? { spreadUnita: C > 0 ? Math.round(((energiaVolume - fissaEnergia - quotaIndice) / C) * 1e5) / 1e5 : 0 } : {}),
       quotaFissaMese: Math.round((fissaVenditore / 12) * 100) / 100,
     },

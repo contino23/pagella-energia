@@ -40,7 +40,7 @@ export function giudizio(v: number): string {
     : "Gravemente insufficiente: puoi risparmiare molto";
 }
 
-export interface Fatto { etichetta: string; valore: string; nota?: string }
+export interface Fatto { etichetta: string; valore: string; nota?: string; sconti?: Array<{ testo: string; condizionato: boolean }> }
 
 /** I tre dati "a colpo d'occhio" di un'offerta: prezzo dell'energia, quota fissa, tipo di prezzo. */
 export function fattiOfferta(r: RisultatoOfferta, quotaLetta?: number): Fatto[] {
@@ -48,9 +48,15 @@ export function fattiOfferta(r: RisultatoOfferta, quotaLetta?: number): Fatto[] 
   const u = o.commodity === "gas" ? "Smc" : "kWh";
   const indice = o.commodity === "gas" ? "PSV" : "PUN";
   const si = r.stima.sintesi;
-  const prezzo: Fatto = si.spreadUnita !== undefined
-    ? { etichetta: "Prezzo energia", valore: `${indice} + ${decimali(si.spreadUnita, 3)}`, nota: `€/${u} · oggi circa ${decimali(si.prezzoUnita, 3)}` }
-    : { etichetta: "Prezzo energia", valore: decimali(si.prezzoUnita, 3), nota: `€/${u}` };
+  const variabile = si.spreadUnita !== undefined;
+  const sconti = si.sconti.map((x) => ({
+    testo: variabile ? `−${decimali(x.perUnita, 3)} €/${u} ${x.quando}` : `${decimali(si.prezzoUnita - x.perUnita, 3)} €/${u} ${x.quando}`,
+    condizionato: x.condizionato,
+  }));
+  const prezzo: Fatto = variabile
+    ? { etichetta: "Prezzo energia", valore: `${indice} + ${decimali(si.spreadUnita!, 3)}`, nota: `€/${u} · oggi circa ${decimali(si.prezzoUnita, 3)}` }
+    : { etichetta: "Prezzo energia", valore: decimali(si.prezzoUnita, 3), nota: sconti.length ? `€/${u} di listino` : `€/${u}` };
+  if (sconti.length) prezzo.sconti = sconti;
   const q = Math.round((quotaLetta ?? si.quotaFissaMese) * 100) / 100;
   const quota: Fatto = { etichetta: "Quota fissa", valore: Number.isInteger(q) ? String(q) : decimali(q, 2), nota: "€/mese" };
   const tipo: Fatto = o.prezzo === "variabile" ? { etichetta: "Tipo di prezzo", valore: "Variabile", nota: "cambia ogni mese" }
