@@ -102,7 +102,7 @@ export function PrezzoSpiegato({ r }: { r: RisultatoOfferta }) {
 }
 
 function SchedaBase({ r, pos, riferimento }: { r: RisultatoOfferta; pos: number; riferimento: number | null }) {
-  const [aperta, setAperta] = useState(pos === 1);
+  const [aperta, setAperta] = useState(false);
   const o = r.offerta;
   const spesa = r.stima.totale;
   const diff = riferimento !== null ? riferimento - spesa : null;
@@ -119,7 +119,7 @@ function SchedaBase({ r, pos, riferimento }: { r: RisultatoOfferta; pos: number;
       </View>
       <Fatti r={r} />
       <View style={st.cifre}>
-        {diff !== null ? (diff >= 1 ? <Cifra etichetta="Risparmi/anno" valore={euro(diff)} risparmio /> : <Cifra etichetta="Rispetto alla tua" valore={`+${euro(-diff)}`} />) : null}
+        {diff !== null ? (diff >= 1 ? <Cifra etichetta="Risparmio annuo" valore={euro(diff)} risparmio /> : <Cifra etichetta="Rispetto alla tua" valore={`+${euro(-diff)}`} />) : null}
         <Cifra etichetta="Spesa annua" valore={euro(spesa)} />
         <Cifra etichetta="Al mese" valore={euro(spesa / 12)} />
       </View>
