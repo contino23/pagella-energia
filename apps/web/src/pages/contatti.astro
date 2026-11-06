@@ -15,15 +15,6 @@ import { CONTATTI_ENDPOINT } from "../config";
       </div>
 
       <form class="riquadro contatti-modulo" id="modulo" data-endpoint={CONTATTI_ENDPOINT} novalidate>
-        <label class="campo" for="tipo">Di cosa si tratta
-          <select id="tipo" name="tipo">
-            <option>Un problema con il sito o l'app</option>
-            <option>Una segnalazione su un'offerta</option>
-            <option>Un giudizio o un suggerimento</option>
-            <option>Un ringraziamento</option>
-            <option>Altro</option>
-          </select>
-        </label>
         <label class="campo" for="nome">Nome <small>(facoltativo)</small>
           <input type="text" id="nome" name="nome" autocomplete="given-name" maxlength="80" />
         </label>
@@ -82,12 +73,11 @@ import { CONTATTI_ENDPOINT } from "../config";
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
-          _subject: `Pagella Energia · ${d.get("tipo")}`,
+          _subject: "Messaggio da Pagella Energia",
           _template: "table",
           _captcha: "false",
           ...(email ? { _replyto: email, email } : {}),
           nome: String(d.get("nome") ?? "").trim() || "(non indicato)",
-          tipo: d.get("tipo"),
           messaggio,
           pagina: document.referrer || "diretto",
         }),
