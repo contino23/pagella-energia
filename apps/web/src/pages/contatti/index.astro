@@ -1,6 +1,6 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { CONTATTI_DESTINAZIONE } from "../../config";
+import { WEB3FORMS_CHIAVE } from "../../config";
 const grazie = new URL(`${import.meta.env.BASE_URL.replace(/\/?$/, "/")}contatti/grazie/`, Astro.site).toString();
 ---
 <Base titolo="Contatti · Pagella Energia" descrizione="Scrivici per problemi, segnalazioni su un'offerta, giudizi o ringraziamenti." pagina="contatti">
@@ -15,10 +15,11 @@ const grazie = new URL(`${import.meta.env.BASE_URL.replace(/\/?$/, "/")}contatti
         </ul>
       </div>
 
-      <form class="riquadro contatti-modulo" id="modulo" action={`https://formsubmit.co/${CONTATTI_DESTINAZIONE}`} method="POST" novalidate>
-        <input type="hidden" name="_subject" value="Messaggio da Pagella Energia" />
-        <input type="hidden" name="_template" value="table" />
-        <input type="hidden" name="_next" value={grazie} />
+      <form class="riquadro contatti-modulo" id="modulo" action="https://api.web3forms.com/submit" method="POST" novalidate>
+        <input type="hidden" name="access_key" value={WEB3FORMS_CHIAVE} />
+        <input type="hidden" name="subject" value="Messaggio da Pagella Energia" />
+        <input type="hidden" name="from_name" value="Pagella Energia" />
+        <input type="hidden" name="redirect" value={grazie} />
         <label class="campo" for="nome">Nome <small>(facoltativo)</small>
           <input type="text" id="nome" name="nome" autocomplete="given-name" maxlength="80" />
         </label>
@@ -28,13 +29,15 @@ const grazie = new URL(`${import.meta.env.BASE_URL.replace(/\/?$/, "/")}contatti
         <label class="campo" for="messaggio">Messaggio
           <textarea id="messaggio" name="messaggio" rows="7" maxlength="4000" required></textarea>
         </label>
-        <input type="text" name="_honey" tabindex="-1" autocomplete="off" class="sr" aria-hidden="true" />
+        <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" class="sr" aria-hidden="true" />
         <label class="scelta" for="consenso"><input type="checkbox" id="consenso" name="consenso" required />
           <span>Acconsento all'uso di questi dati solo per rispondere al mio messaggio.</span>
         </label>
-        <button type="submit" class="pe-btn" style="height:52px;font-size:16px">Invia</button>
+        <div class="h-captcha" data-captcha="true"></div>
+        <button type="submit" class="pe-btn" style="height:52px;font-size:16px" disabled={!WEB3FORMS_CHIAVE}>Invia</button>
+        {!WEB3FORMS_CHIAVE && <p class="stato errore" style="margin:0">Il modulo è in configurazione: nel frattempo puoi scrivere a info@slashservices.it.</p>}
         <p class="stato" id="esito" role="status" aria-live="polite" style="margin:0"></p>
-        <small class="privacy">Dopo "Invia" ti verrà chiesto di confermare che non sei un robot. Il messaggio arriva via email a Slash Services tramite il servizio FormSubmit: non viene pubblicato né usato per altro, e non viene registrato su questo sito.</small>
+        <small class="privacy">Il messaggio arriva via email a Slash Services tramite il servizio Web3Forms; il controllo anti-robot è di hCaptcha. Non viene pubblicato né usato per altro, e non viene registrato su questo sito.</small>
       </form>
     </section>
   </div>
@@ -56,7 +59,7 @@ const grazie = new URL(`${import.meta.env.BASE_URL.replace(/\/?$/, "/")}contatti
 </style>
 
 <script>
-  // Controlli prima dell'invio; poi il modulo va a FormSubmit, che chiede il captcha e torna su /contatti/grazie/.
+  // Controlli prima dell'invio; poi il modulo va a Web3Forms (con il token hCaptcha) e torna su /contatti/grazie/.
   const modulo = document.getElementById("modulo") as HTMLFormElement;
   const esito = document.getElementById("esito")!;
   const scrivi = (t: string) => { esito.textContent = t; esito.className = "stato errore"; };
@@ -68,8 +71,11 @@ const grazie = new URL(`${import.meta.env.BASE_URL.replace(/\/?$/, "/")}contatti
     if (messaggio.length < 5) errore = "Scrivi un messaggio un po' più lungo.";
     else if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errore = "L'indirizzo email non sembra valido.";
     else if (!d.get("consenso")) errore = "Serve il consenso per poterti rispondere.";
+    else if (d.get("botcheck")) { e.preventDefault(); return; }
     if (errore) { e.preventDefault(); scrivi(errore); return; }
-    if (!email) modulo.querySelector<HTMLInputElement>("#email")!.disabled = true; // FormSubmit rifiuta un campo email vuoto
+    const captcha = modulo.querySelector<HTMLTextAreaElement>('[name="h-captcha-response"]');
+    if (captcha && !captcha.value) { e.preventDefault(); scrivi("Conferma di non essere un robot prima di inviare."); return; }
     esito.textContent = "";
   });
 </script>
+<script is:inline src="https://web3forms.com/client/script.js" async defer></script>
