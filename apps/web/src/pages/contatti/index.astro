@@ -13,6 +13,7 @@ const grazie = new URL(`${import.meta.env.BASE_URL.replace(/\/?$/, "/")}contatti
           <li><strong>Un'offerta che non torna?</strong> Indica il codice offerta e cosa ti sembra sbagliato.</li>
           <li><strong>La bolletta non viene letta bene?</strong> Dimmi il venditore e quale dato manca. <strong>Non incollare dati personali</strong> come codice cliente, POD o indirizzo.</li>
         </ul>
+        <p class="contatti-mail">Se preferisci, al di là del modulo puoi scrivere direttamente a <a href="mailto:info@slashservices.it">info@slashservices.it</a>.</p>
       </div>
 
       <form class="riquadro contatti-modulo" id="modulo" action="https://api.web3forms.com/submit" method="POST" novalidate>
@@ -48,6 +49,8 @@ const grazie = new URL(`${import.meta.env.BASE_URL.replace(/\/?$/, "/")}contatti
   .contatti h1 { font-size: 44px; line-height: 1.05; margin: 0 0 16px; letter-spacing: -0.02em; }
   .contatti .intro { font-size: 19px; line-height: 1.5; color: var(--ink-muted); margin: 0 0 20px; }
   .contatti-note { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 10px; font-size: 15.5px; line-height: 1.5; }
+  .contatti-mail { margin: 20px 0 0; font-size: 15.5px; line-height: 1.5; }
+  .contatti-mail a { color: var(--ink); font-weight: 700; }
   .contatti-modulo { display: flex; flex-direction: column; gap: 16px; }
   .contatti-modulo textarea { border: 1.5px solid var(--line-strong); border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 16px; font-weight: 400; color: var(--ink); resize: vertical; min-height: 140px; }
   .contatti-modulo .scelta { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.4; }
