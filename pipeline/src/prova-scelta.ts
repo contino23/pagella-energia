@@ -1,0 +1,10 @@
+import { readFileSync, readdirSync } from "node:fs";
+import { gunzipSync } from "node:zlib";
+import { classifica, creaScenari, type Fotografia } from "@pagella/core";
+import { leggiIndiciCsv } from "./leggi-indici.js";
+const d = readdirSync("../data/fotografie").sort().at(-1);
+const foto = JSON.parse(gunzipSync(readFileSync(`../data/fotografie/${d}/offerte.json.gz`)).toString()) as Fotografia;
+const scen = creaScenari(leggiIndiciCsv(readFileSync("../data/indici/prezzi-storici-indici.csv", "utf8")));
+const r = classifica(foto.offerte, { commodity: "luce", luce: { consumoAnnuoKwh: 2700, potenzaKw: 3, residente: true }, luogo: { comune: "015146", provincia: "015", regione: "03" } }, foto.parametri, scen);
+const famosi = r.map((x, i) => ({ i, x })).filter(({ x }) => /enel|edison|a2a|hera|iren|sorgenia|acea/i.test(x.offerta.contatti.sito ?? "") && x.pagella.voto > 3 && x.pagella.voto < 5.5);
+for (const { i, x } of famosi.slice(0, 6)) console.log(i, x.offerta.codice, x.offerta.nome, x.pagella.voto, Math.round(x.stima.totale), x.offerta.contatti.sito);

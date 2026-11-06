@@ -43,7 +43,7 @@ export function calcola(p: Profilo, dati: Dati): Esito {
     : { commodity: "gas", gas: { consumoAnnuoSmc: p.cons, regione: com?.regione ?? "09", zonaClimatica: p.zona }, ...(luogo ? { luogo } : {}) };
   const { mercato, offerte } = dati;
   let risultati = classifica(offerte, profilo, mercato.parametri, mercato.scenari);
-  const propria = p.cod ? offerte.find((o) => o.codice === p.cod) : undefined;
+  const propria = p.cod ? offerte.find((o) => o.codice.toUpperCase() === p.cod!.toUpperCase()) : undefined;
   let tua = propria ? valutaOfferta(propria, profilo, mercato.parametri, mercato.scenari, risultati) : null;
   let origine: Esito["origine"] = tua ? "portale" : null;
   if (!tua && p.bolletta?.prezzoVendita !== undefined) {

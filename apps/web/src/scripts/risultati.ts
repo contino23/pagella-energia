@@ -287,7 +287,7 @@ function disegnaTua(s: Stato) {
 function calcola(s: Stato) {
   const profilo = profiloDa(s);
   risultati = classifica(offerte, profilo, mercato.parametri, mercato.scenari);
-  const propria = s.cod ? offerte.find((o) => o.codice === s.cod) : undefined;
+  const propria = s.cod ? offerte.find((o) => o.codice.toUpperCase() === s.cod!.toUpperCase()) : undefined;
   tua = propria ? valutaOfferta(propria, profilo, mercato.parametri, mercato.scenari, risultati) : null;
   origine = tua ? "portale" : null;
   soloPrezzo = null;
