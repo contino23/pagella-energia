@@ -6,7 +6,7 @@
 
 Gratis, senza registrazione, senza pubblicità. La bolletta resta sul tuo dispositivo.
 
-[**Apri il sito**](https://contino23.github.io/pagella-energia/) ·
+[**Apri il sito**](https://pagellaenergia.it/) ·
 [**Scarica l'app Android (anteprima)**](https://github.com/contino23/pagella-energia/releases/download/app-anteprima/pagella-energia-anteprima.apk) ·
 [**Come calcoliamo il voto**](docs/METODOLOGIA.md)
 

@@ -5,7 +5,7 @@
 import { File, Paths } from "expo-file-system";
 import type { Offerta, Parametro, ScenariIndici } from "@pagella/core";
 
-export const SITO = process.env.EXPO_PUBLIC_SITO ?? "https://contino23.github.io/pagella-energia/";
+export const SITO = process.env.EXPO_PUBLIC_SITO ?? "https://pagellaenergia.it/";
 const DATI = `${SITO}dati/`;
 
 export interface Migliore { codice: string; nome: string; sito?: string; prezzo: Offerta["prezzo"]; durataMesi: number | null; voto: number; spesaAnnua: number; avvisi: number }

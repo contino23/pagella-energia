@@ -31,8 +31,8 @@ jobs:
       - name: Costruisci
         run: npm run sito
         env:
-          BASE_PATH: /pagella-energia/
-          SITE_URL: https://contino23.github.io
+          BASE_PATH: /
+          SITE_URL: https://pagellaenergia.it
       - uses: actions/upload-pages-artifact@v3
         with:
           path: apps/web/dist
