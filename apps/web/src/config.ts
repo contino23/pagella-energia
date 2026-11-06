@@ -10,4 +10,4 @@ export const DONAZIONI_URL = "https://www.paypal.me/lucacolosimo23/4EUR";
  * costruzione: identifica il modulo, non dà accesso alla casella.
  * Finché è vuota il modulo mostra un avviso e il pulsante resta disattivato.
  */
-export const WEB3FORMS_CHIAVE = "";
+export const WEB3FORMS_CHIAVE = "bb9336d1-4db1-4996-aa1f-ef183e6a9535";
