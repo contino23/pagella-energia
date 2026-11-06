@@ -1,6 +1,7 @@
 ---
-import Base from "../layouts/Base.astro";
-import { CONTATTI_ENDPOINT } from "../config";
+import Base from "../../layouts/Base.astro";
+import { CONTATTI_DESTINAZIONE } from "../../config";
+const grazie = new URL(`${import.meta.env.BASE_URL.replace(/\/?$/, "/")}contatti/grazie/`, Astro.site).toString();
 ---
 <Base titolo="Contatti · Pagella Energia" descrizione="Scrivici per problemi, segnalazioni su un'offerta, giudizi o ringraziamenti." pagina="contatti">
   <div class="wrap">
@@ -14,7 +15,10 @@ import { CONTATTI_ENDPOINT } from "../config";
         </ul>
       </div>
 
-      <form class="riquadro contatti-modulo" id="modulo" data-endpoint={CONTATTI_ENDPOINT} novalidate>
+      <form class="riquadro contatti-modulo" id="modulo" action={`https://formsubmit.co/${CONTATTI_DESTINAZIONE}`} method="POST" novalidate>
+        <input type="hidden" name="_subject" value="Messaggio da Pagella Energia" />
+        <input type="hidden" name="_template" value="table" />
+        <input type="hidden" name="_next" value={grazie} />
         <label class="campo" for="nome">Nome <small>(facoltativo)</small>
           <input type="text" id="nome" name="nome" autocomplete="given-name" maxlength="80" />
         </label>
@@ -30,7 +34,7 @@ import { CONTATTI_ENDPOINT } from "../config";
         </label>
         <button type="submit" class="pe-btn" style="height:52px;font-size:16px">Invia</button>
         <p class="stato" id="esito" role="status" aria-live="polite" style="margin:0"></p>
-        <small class="privacy">Il messaggio arriva via email a Slash Services tramite il servizio FormSubmit. Non viene pubblicato né usato per altro, e non viene registrato su questo sito.</small>
+        <small class="privacy">Dopo "Invia" ti verrà chiesto di confermare che non sei un robot. Il messaggio arriva via email a Slash Services tramite il servizio FormSubmit: non viene pubblicato né usato per altro, e non viene registrato su questo sito.</small>
       </form>
     </section>
   </div>
@@ -52,44 +56,20 @@ import { CONTATTI_ENDPOINT } from "../config";
 </style>
 
 <script>
+  // Controlli prima dell'invio; poi il modulo va a FormSubmit, che chiede il captcha e torna su /contatti/grazie/.
   const modulo = document.getElementById("modulo") as HTMLFormElement;
   const esito = document.getElementById("esito")!;
-  const invia = modulo.querySelector<HTMLButtonElement>('button[type="submit"]')!;
-  const scrivi = (t: string, tipo: "ok" | "errore" | "") => { esito.textContent = t; esito.className = `stato ${tipo}`; };
-
-  modulo.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  const scrivi = (t: string) => { esito.textContent = t; esito.className = "stato errore"; };
+  modulo.addEventListener("submit", (e) => {
     const d = new FormData(modulo);
     const messaggio = String(d.get("messaggio") ?? "").trim();
     const email = String(d.get("email") ?? "").trim();
-    if (messaggio.length < 5) return scrivi("Scrivi un messaggio un po' più lungo.", "errore");
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return scrivi("L'indirizzo email non sembra valido.", "errore");
-    if (!d.get("consenso")) return scrivi("Serve il consenso per poterti rispondere.", "errore");
-    if (d.get("_honey")) return scrivi("Grazie, messaggio inviato.", "ok"); // probabile robot: non inviamo nulla
-    invia.disabled = true;
-    scrivi("Invio in corso…", "");
-    try {
-      const r = await fetch(modulo.dataset.endpoint!, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({
-          _subject: "Messaggio da Pagella Energia",
-          _template: "table",
-          _captcha: "false",
-          ...(email ? { _replyto: email, email } : {}),
-          nome: String(d.get("nome") ?? "").trim() || "(non indicato)",
-          messaggio,
-          pagina: document.referrer || "diretto",
-        }),
-      });
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok || j.success === "false" || j.success === false) throw new Error(j.message || String(r.status));
-      modulo.reset();
-      scrivi(email ? "Grazie! Messaggio inviato: ti risponderò all'indirizzo che hai indicato." : "Grazie! Messaggio inviato.", "ok");
-    } catch {
-      scrivi("Non sono riuscito a inviare il messaggio. Riprova tra poco oppure scrivi a info@slashservices.it.", "errore");
-    } finally {
-      invia.disabled = false;
-    }
+    let errore = "";
+    if (messaggio.length < 5) errore = "Scrivi un messaggio un po' più lungo.";
+    else if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errore = "L'indirizzo email non sembra valido.";
+    else if (!d.get("consenso")) errore = "Serve il consenso per poterti rispondere.";
+    if (errore) { e.preventDefault(); scrivi(errore); return; }
+    if (!email) modulo.querySelector<HTMLInputElement>("#email")!.disabled = true; // FormSubmit rifiuta un campo email vuoto
+    esito.textContent = "";
   });
 </script>
