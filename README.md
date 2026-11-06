@@ -8,7 +8,8 @@ Gratis, senza registrazione, senza pubblicità. La bolletta resta sul tuo dispos
 
 [**Apri il sito**](https://pagellaenergia.it/) ·
 [**Scarica l'app Android (anteprima)**](https://github.com/contino23/pagella-energia/releases/download/app-anteprima/pagella-energia-anteprima.apk) ·
-[**Come calcoliamo il voto**](docs/METODOLOGIA.md)
+[**Come calcoliamo il voto**](docs/METODOLOGIA.md) ·
+[**Scrivimi**](https://pagellaenergia.it/contatti/)
 
 [![Test](https://github.com/contino23/pagella-energia/actions/workflows/test.yml/badge.svg)](https://github.com/contino23/pagella-energia/actions/workflows/test.yml)
 [![Sito](https://github.com/contino23/pagella-energia/actions/workflows/sito.yml/badge.svg)](https://github.com/contino23/pagella-energia/actions/workflows/sito.yml)
@@ -127,6 +128,10 @@ Segnalazioni e proposte sono benvenute nelle [issue](https://github.com/contino2
 - **un'offerta con spesa o avvisi che non tornano**, con il codice offerta;
 - **idee sul metodo di voto.** Ogni cambiamento viene registrato nella [metodologia](docs/METODOLOGIA.md) con la data.
 
+## Contatti
+
+Per problemi, segnalazioni, giudizi o magari, perché no, anche ringraziamenti: [**scrivimi**](https://pagellaenergia.it/contatti/). Leggo tutto e rispondo appena posso.
+
 ## Prossimi passi
 
 - App Android sul Play Store, con il lettore PDF incluso nell'app per funzionare anche offline
@@ -145,5 +150,5 @@ Il codice è rilasciato con licenza [GNU AGPL v3 o successiva](LICENSE): puoi us
 ---
 
 <div align="center">
-Creato per passione da <a href="https://www.slashservices.it">Slash Services</a>
+Creato per passione da <a href="https://www.slashservices.it">Slash Services</a> · <a href="https://pagellaenergia.it/contatti/">Scrivimi</a>
 </div>
