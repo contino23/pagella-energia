@@ -136,7 +136,7 @@ Segnalazioni e proposte sono benvenute nelle [issue](https://github.com/contino2
 
 ## Sostieni il progetto
 
-Pagella Energia è gratuito e senza pubblicità. Se ti ha fatto risparmiare, [offrimi una birra 🍺](https://contino23.github.io/pagella-energia/metodo/#sostieni).
+Pagella Energia è gratuito e senza pubblicità. Se ti ha fatto risparmiare, [offrimi una birra 🍺](https://www.paypal.me/lucacolosimo23/4EUR).
 
 ## Licenza
 

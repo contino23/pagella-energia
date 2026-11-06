@@ -1,5 +1,5 @@
 /**
- * Link per le donazioni (Buy Me a Coffee, Ko-fi, PayPal.me…).
- * Finché è vuoto, i pulsanti portano alla sezione "Sostieni il progetto" del metodo.
+ * Link per le donazioni: PayPal.me con importo proposto di 4 € (chi dona può cambiarlo).
+ * Se vuoto, i pulsanti portano alla sezione "Sostieni il progetto" del metodo.
  */
-export const DONAZIONI_URL = "";
+export const DONAZIONI_URL = "https://www.paypal.me/lucacolosimo23/4EUR";
