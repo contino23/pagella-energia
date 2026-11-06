@@ -96,7 +96,11 @@ export default function Home() {
         <View style={{ gap: 10, borderTopWidth: 1, borderTopColor: C.line, paddingTop: 18 }}>
           <Pulsante titolo="Come calcoliamo il voto" tipo="link" onPress={() => router.push("/metodo")} />
           <Pulsante titolo="🍺  Offrimi una birra" tipo="birra" stile={{ alignSelf: "flex-start" }} onPress={() => Linking.openURL(DONAZIONI_URL || `${SITO}metodo/#sostieni`)} />
-          <Tenue style={{ fontSize: 13 }}>Servizio gratuito e senza pubblicità. Dati aperti del Portale Offerte ARERA. Nessuna commissione dai venditori.</Tenue>
+          <Tenue style={{ fontSize: 13 }}>Servizio gratuito, senza registrazione · Dati aperti del Portale Offerte ARERA · Nessuna commissione dai venditori · Codice open source</Tenue>
+          <Text style={{ fontFamily: F.regular, fontSize: 13, color: C.inkMuted }}>
+            Creato per passione da{" "}
+            <Text style={{ fontFamily: F.bold, color: C.ink, textDecorationLine: "underline" }} accessibilityRole="link" onPress={() => Linking.openURL("https://www.slashservices.it")}>Slash Services</Text>
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
