@@ -275,3 +275,4 @@ img { max-width: 100%; }
 @media (max-width: 480px) { .fatti .sconto { font-size: 10.5px; padding: 3px 5px; } }
 .piede-testo { display: flex; flex-direction: column; gap: 6px; }
 .piede-testo a { color: var(--ink); font-weight: 600; }
+@media (max-width: 560px) { .testata .solo-largo { display: none; } }

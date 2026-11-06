@@ -1,0 +1,105 @@
+---
+import Base from "../layouts/Base.astro";
+import { CONTATTI_ENDPOINT } from "../config";
+---
+<Base titolo="Contatti · Pagella Energia" descrizione="Scrivici per problemi, segnalazioni su un'offerta, giudizi o ringraziamenti." pagina="contatti">
+  <div class="wrap">
+    <section class="contatti">
+      <div class="contatti-testo">
+        <h1>Scrivimi</h1>
+        <p class="intro">Per problemi, segnalazioni, giudizi o magari, perché no, anche ringraziamenti: scrivimi. Leggo tutto e rispondo appena posso.</p>
+        <ul class="contatti-note">
+          <li><strong>Un'offerta che non torna?</strong> Indica il codice offerta e cosa ti sembra sbagliato.</li>
+          <li><strong>La bolletta non viene letta bene?</strong> Dimmi il venditore e quale dato manca. <strong>Non incollare dati personali</strong> come codice cliente, POD o indirizzo.</li>
+        </ul>
+      </div>
+
+      <form class="riquadro contatti-modulo" id="modulo" data-endpoint={CONTATTI_ENDPOINT} novalidate>
+        <label class="campo" for="tipo">Di cosa si tratta
+          <select id="tipo" name="tipo">
+            <option>Un problema con il sito o l'app</option>
+            <option>Una segnalazione su un'offerta</option>
+            <option>Un giudizio o un suggerimento</option>
+            <option>Un ringraziamento</option>
+            <option>Altro</option>
+          </select>
+        </label>
+        <label class="campo" for="nome">Nome <small>(facoltativo)</small>
+          <input type="text" id="nome" name="nome" autocomplete="given-name" maxlength="80" />
+        </label>
+        <label class="campo" for="email">Email per la risposta <small>(facoltativa: senza, non posso risponderti)</small>
+          <input type="email" id="email" name="email" autocomplete="email" maxlength="120" />
+        </label>
+        <label class="campo" for="messaggio">Messaggio
+          <textarea id="messaggio" name="messaggio" rows="7" maxlength="4000" required></textarea>
+        </label>
+        <input type="text" name="_honey" tabindex="-1" autocomplete="off" class="sr" aria-hidden="true" />
+        <label class="scelta" for="consenso"><input type="checkbox" id="consenso" name="consenso" required />
+          <span>Acconsento all'uso di questi dati solo per rispondere al mio messaggio.</span>
+        </label>
+        <button type="submit" class="pe-btn" style="height:52px;font-size:16px">Invia</button>
+        <p class="stato" id="esito" role="status" aria-live="polite" style="margin:0"></p>
+        <small class="privacy">Il messaggio arriva via email a Slash Services tramite il servizio FormSubmit. Non viene pubblicato né usato per altro, e non viene registrato su questo sito.</small>
+      </form>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .contatti { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 48px; padding-block: 48px 24px; align-items: start; }
+  .contatti h1 { font-size: 44px; line-height: 1.05; margin: 0 0 16px; letter-spacing: -0.02em; }
+  .contatti .intro { font-size: 19px; line-height: 1.5; color: var(--ink-muted); margin: 0 0 20px; }
+  .contatti-note { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 10px; font-size: 15.5px; line-height: 1.5; }
+  .contatti-modulo { display: flex; flex-direction: column; gap: 16px; }
+  .contatti-modulo textarea { border: 1.5px solid var(--line-strong); border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 16px; font-weight: 400; color: var(--ink); resize: vertical; min-height: 140px; }
+  .contatti-modulo .scelta { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.4; }
+  .contatti-modulo .scelta input { margin-top: 2px; width: 18px; height: 18px; flex: none; }
+  .contatti-modulo .privacy { color: var(--ink-muted); font-size: 12.5px; line-height: 1.5; }
+  .contatti-modulo .stato.ok { color: var(--on-good); font-weight: 700; }
+  .contatti-modulo .stato.errore { color: var(--warn); font-weight: 700; }
+  @media (max-width: 860px) { .contatti { grid-template-columns: 1fr; gap: 24px; padding-block: 24px 8px; } .contatti h1 { font-size: 34px; } }
+</style>
+
+<script>
+  const modulo = document.getElementById("modulo") as HTMLFormElement;
+  const esito = document.getElementById("esito")!;
+  const invia = modulo.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+  const scrivi = (t: string, tipo: "ok" | "errore" | "") => { esito.textContent = t; esito.className = `stato ${tipo}`; };
+
+  modulo.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const d = new FormData(modulo);
+    const messaggio = String(d.get("messaggio") ?? "").trim();
+    const email = String(d.get("email") ?? "").trim();
+    if (messaggio.length < 5) return scrivi("Scrivi un messaggio un po' più lungo.", "errore");
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return scrivi("L'indirizzo email non sembra valido.", "errore");
+    if (!d.get("consenso")) return scrivi("Serve il consenso per poterti rispondere.", "errore");
+    if (d.get("_honey")) return scrivi("Grazie, messaggio inviato.", "ok"); // probabile robot: non inviamo nulla
+    invia.disabled = true;
+    scrivi("Invio in corso…", "");
+    try {
+      const r = await fetch(modulo.dataset.endpoint!, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          _subject: `Pagella Energia · ${d.get("tipo")}`,
+          _template: "table",
+          _captcha: "false",
+          ...(email ? { _replyto: email, email } : {}),
+          nome: String(d.get("nome") ?? "").trim() || "(non indicato)",
+          tipo: d.get("tipo"),
+          messaggio,
+          pagina: document.referrer || "diretto",
+        }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || j.success === "false" || j.success === false) throw new Error(j.message || String(r.status));
+      modulo.reset();
+      scrivi(email ? "Grazie! Messaggio inviato: ti risponderò all'indirizzo che hai indicato." : "Grazie! Messaggio inviato.", "ok");
+    } catch {
+      scrivi("Non sono riuscito a inviare il messaggio. Riprova tra poco oppure scrivi a info@slashservices.it.", "errore");
+    } finally {
+      invia.disabled = false;
+    }
+  });
+</script>

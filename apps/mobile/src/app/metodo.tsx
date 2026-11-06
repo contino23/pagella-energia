@@ -27,6 +27,9 @@ export default function Metodo() {
       <Sottotitolo>Sostieni il progetto</Sottotitolo>
       <T>Pagella Energia è gratuito, senza pubblicità e senza commissioni dai venditori. Se ti ha fatto risparmiare, offrimi una birra.</T>
       <Pulsante titolo="🍺  Offrimi una birra" tipo="birra" stile={{ alignSelf: "flex-start" }} onPress={() => Linking.openURL(DONAZIONI_URL || `${SITO}metodo/#sostieni`)} />
+      <Sottotitolo>Contatti</Sottotitolo>
+      <T>Per problemi, segnalazioni, giudizi o magari, perché no, anche ringraziamenti: scrivimi.</T>
+      <Pulsante titolo="Scrivimi" tipo="secondario" stile={{ alignSelf: "flex-start" }} onPress={() => Linking.openURL(`${SITO}contatti/`)} />
     </ScrollView>
   );
 }

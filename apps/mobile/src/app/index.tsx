@@ -101,6 +101,10 @@ export default function Home() {
             Creato per passione da{" "}
             <Text style={{ fontFamily: F.bold, color: C.ink, textDecorationLine: "underline" }} accessibilityRole="link" onPress={() => Linking.openURL("https://www.slashservices.it")}>Slash Services</Text>
           </Text>
+          <Text style={{ fontFamily: F.regular, fontSize: 13, color: C.inkMuted }}>
+            Problemi, segnalazioni, giudizi o, perché no, ringraziamenti?{" "}
+            <Text style={{ fontFamily: F.bold, color: C.ink, textDecorationLine: "underline" }} accessibilityRole="link" onPress={() => Linking.openURL(`${SITO}contatti/`)}>Scrivimi</Text>
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
