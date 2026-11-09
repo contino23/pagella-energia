@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { creaPagella, stimaSpesaLuce, votoPrezzo, votoVincoli } from "@pagella/core";
+import { creaPagella, penaleRecesso, stimaSpesaLuce, testoPenale, votoPrezzo, votoVincoli, type Offerta } from "@pagella/core";
 import { leggiOfferteXml } from "../src/leggi-offerte.js";
 import { leggiParametriCsv } from "../src/leggi-parametri.js";
 
@@ -70,5 +70,33 @@ describe("stima dei consumi per chi non li conosce", () => {
     expect(smc).toBeGreaterThan(1500);
     expect(smc).toBeLessThan(1800);
     expect(stimaConsumoGas({ persone: 3, cucina: true, acquaCalda: false, riscaldamento: false, zona: "E" })).toBe(170);
+  });
+});
+
+describe("penale di uscita", () => {
+  const base = (testo: string, extra: Partial<Offerta> = {}): Offerta => ({
+    nome: "Prova", descrizione: "", durataMesi: null,
+    condizioni: [{ tipo: "ONERI_RECESSO_ANTICIPATO", codice: "05", limitante: false, testo }],
+    derivati: { haPenaleRecesso: true, haCondizioniLimitanti: false, haServiziAggiuntivi: false, disponibileOvunque: true },
+    ...extra,
+  }) as unknown as Offerta;
+
+  it("legge i mesi scritti nella condizione", () => {
+    const p = penaleRecesso(base("In caso di recesso durante i primi due anni (24 mesi) di fornitura a prezzo fisso ... pari a 138€ nel primo mese di fornitura, 132€ nel secondo"))!;
+    expect(p.mesi).toBe(24);
+    expect(testoPenale(p)).toBe("se cambi fornitore nei primi 24 mesi (2 anni) dall'attivazione: fino a 138 €");
+  });
+  it("preferisce la durata dell'offerta agli scaglioni del testo", () => {
+    expect(penaleRecesso(base("massimo di 300 euro per il primo anno di fornitura, 200 euro per il secondo anno", { durataMesi: 36 }))!.mesi).toBe(36);
+  });
+  it("usa la descrizione e le date quando la durata manca", () => {
+    expect(penaleRecesso(base("Oneri di Recesso Anticipato", { descrizione: "Prezzo fisso bloccato per dieci anni." }))!.mesi).toBe(120);
+    expect(penaleRecesso(base("anticipatamente rispetto alla durata", { descrizione: "prezzo fisso e invariabile fino al 31/12/2031, con energia" }))!.finoAl).toBe("31/12/2031");
+  });
+  it("riconosce chi dichiara di non avere penali", () => {
+    expect(penaleRecesso(base("Octopus Energy non applica alcun onere di recesso, quindi anche questa offerta non ne prevede."))).toBeNull();
+  });
+  it("non scambia un importo al mese per la penale", () => {
+    expect(penaleRecesso(base("pari a 1,99 € (uno/99 euro) per ogni mese residuo", { durataMesi: 26 }))!.importo).toBeUndefined();
   });
 });

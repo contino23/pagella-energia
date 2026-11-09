@@ -7,6 +7,7 @@ import { stimaSpesaGas, type ProfiloGas } from "./calcolo-gas.js";
 import { stimaSpesaLuce, type ProfiloLuce, type StimaSpesa } from "./calcolo-luce.js";
 import type { Offerta, Parametro } from "./modello.js";
 import { creaPagella, type Pagella } from "./pagella.js";
+import { penaleRecesso, testoPenale } from "./penale.js";
 import { forchetta, type ScenariIndici } from "./scenari.js";
 
 export interface Luogo {
@@ -70,8 +71,8 @@ const euro = (x: number) => `${Math.round(x).toLocaleString("it-IT")} €`;
 /** Avvisi da mostrare nella scheda: arancio per vincoli e costi extra, blu per il prezzo variabile. */
 export function avvisiOfferta(o: Offerta, stima: StimaSpesa, minimo: number, massimo: number): Avviso[] {
   const out: Avviso[] = [];
-  if (o.derivati.haPenaleRecesso)
-    out.push({ tipo: "warn", titolo: "Penale di uscita", testo: o.durataMesi ? `se cambi prima dei ${o.durataMesi} mesi` : "se cambi prima della scadenza del prezzo bloccato" });
+  const penale = penaleRecesso(o);
+  if (penale) out.push({ tipo: "warn", titolo: "Penale di uscita", testo: testoPenale(penale) });
   if (/deposit|cauzion|fideiussion/i.test(o.garanzie) && !/nessun|non (è|e'|viene|sarà) richiest|non prevede|non richiede|non c'è bisogno|non (è|e') necessari|^\s*(no|sepa)\s*$/i.test(o.garanzie))
     out.push({ tipo: "warn", titolo: "Deposito cauzionale", testo: "che può essere richiesto all'attivazione" });
   const ut = stima.voci.find((v) => v.voce === "una_tantum")?.importo ?? 0;

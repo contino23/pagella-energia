@@ -9,3 +9,4 @@ export * from "./lettura-bolletta.js";
 export * from "./offerta-da-bolletta.js";
 export * from "./sconti-unita.js";
 export * from "./stima-consumi.js";
+export * from "./penale.js";

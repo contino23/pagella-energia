@@ -99,7 +99,7 @@ Voto da 0 a 10 per ogni voce, voto complessivo pesato:
 | Voce | Peso | Cosa misura |
 |---|---|---|
 | Prezzo | 60% | Quanto costa in più, in percentuale, della più economica tra le offerte confrontabili per il tuo profilo e il tuo comune. 10 = la più economica; +5% → 8; +10% → 6 (sufficienza); +25% → 3,8; +50% o più → 0. Come riferimento non si usano spese sotto la metà della mediana, quasi sempre errori nei dati pubblicati. |
-| Vincoli | 20% | Parte da 10. −4 se c'è una penale di recesso anticipato; −1 se può essere richiesto un deposito o una garanzia. |
+| Vincoli | 20% | Parte da 10. −4 se c'è una penale di recesso anticipato (nella scheda indichiamo per quanto tempo vale e, se il venditore lo scrive, quanto costa); −1 se può essere richiesto un deposito o una garanzia. |
 | Trasparenza | 10% | Parte da 10. Fino a −4 in proporzione a quanto della convenienza viene da sconti solo iniziali; fino a −2 per costi una tantum; −1 per servizi aggiuntivi inclusi; −2 se i dati sono incompleti. |
 | Affidabilità del venditore | 10% | Dallo storico: spread sull'indice nel tempo, frequenza delle modifiche, rapidità nel trasferire i ribassi. **In arrivo**: finché non è disponibile, il suo peso si ripartisce in proporzione sulle altre voci. |
 
@@ -112,3 +112,4 @@ Prezzo fisso e variabile non sono premiati né penalizzati in sé: è una scelta
 - 4/11/2026: se l'offerta della bolletta non è più in vendita, la ricostruiamo dai prezzi della "spesa per la vendita" stampati in bolletta (per le variabili: prezzo pagato meno l'indice dei mesi fatturati = spread) e la valutiamo come le altre. Se mancano anche quelli, diamo il voto sul solo prezzo partendo dalla spesa annua.
 - 5/11/2026: nelle schede, sotto il prezzo di listino, il prezzo con gli sconti sul prezzo dell'energia (verde se vale per tutti, blu se serve una condizione come la domiciliazione). Gli sconti limitati a una fascia oraria (F1, F2 o F3) ora valgono solo sui consumi di quella fascia: prima uno sconto ripetuto per le tre fasce veniva contato tre volte.
 - 9/11/2026: consumo annuo e comune sono obbligatori per vedere le offerte; chi non conosce il consumo può stimarlo con poche domande (persone in casa, elettrodomestici, metri quadri per il gas).
+- 9/11/2026: per le penali di uscita indichiamo per quanto tempo valgono e, quando il venditore lo scrive, l'importo massimo. Il Portale dice solo se la penale c'è: la durata la ricaviamo dalla durata dell'offerta, dal testo della condizione o dalla descrizione ("bloccato per 36 mesi", "fino al 31/12/2028"). Le offerte che compilano la voce solo per dire che non applicano penali non vengono più penalizzate.

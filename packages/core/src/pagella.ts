@@ -8,6 +8,7 @@
  */
 import type { StimaSpesa } from "./calcolo-luce.js";
 import type { Offerta } from "./modello.js";
+import { penaleRecesso, testoPenale } from "./penale.js";
 
 export const PESI = { prezzo: 0.6, vincoli: 0.2, trasparenza: 0.1, affidabilita: 0.1 } as const;
 export type NomeVoce = keyof typeof PESI;
@@ -84,9 +85,10 @@ const RE_NESSUN_DEPOSITO = /nessun|non (è|e'|viene|sarà) richiest|non prevede|
 export function votoVincoli(o: Offerta): VocePagella {
   let v = 10;
   const motivi: string[] = [];
-  if (o.derivati.haPenaleRecesso) {
+  const penale = penaleRecesso(o);
+  if (penale) {
     v -= 4;
-    motivi.push("Penale se cambi fornitore prima della scadenza del prezzo bloccato");
+    motivi.push(`Penale ${testoPenale(penale)}`);
   }
   if (RE_DEPOSITO.test(o.garanzie) && !RE_NESSUN_DEPOSITO.test(o.garanzie)) {
     v -= 1;

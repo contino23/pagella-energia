@@ -1,5 +1,5 @@
 /** Formati e piccoli aiuti condivisi tra le pagine. */
-import type { Offerta, RisultatoOfferta } from "@pagella/core";
+import { bloccoPrezzo, type Offerta, type RisultatoOfferta } from "@pagella/core";
 
 /** Numeri all'italiana con il punto delle migliaia anche a 4 cifre (1.166, non 1166). */
 const fmtIntero = new Intl.NumberFormat("it-IT", { maximumFractionDigits: 0, useGrouping: "always" as unknown as boolean });
@@ -75,7 +75,12 @@ export function fattiOfferta(r: RisultatoOfferta, quotaLetta?: number): Fatto[] 
   const quota = { etichetta: "Quota fissa", valore: Number.isInteger(q) ? String(q) : dec(q, 2), nota: "€/mese" };
   const tipo = o.prezzo === "variabile" ? { valore: "Variabile", nota: "cambia ogni mese" }
     : o.prezzo === "misto" ? { valore: "Misto", nota: "in parte fisso" }
-    : o.durataMesi && o.durataMesi < 99 ? { valore: "Fisso", nota: `bloccato ${o.durataMesi} mesi` }
-    : { valore: "Fisso", nota: "durata indeterminata" };
+    : { valore: "Fisso", nota: notaBlocco(o) };
   return [prezzo, quota, { etichetta: "Tipo di prezzo", ...tipo }];
+}
+
+/** "bloccato 36 mesi", "bloccato fino al 31/12/2031", "bloccato 10 anni". */
+function notaBlocco(o: Offerta): string {
+  const b = bloccoPrezzo(o);
+  return b.mesi ? `bloccato ${b.mesi >= 60 && b.mesi % 12 === 0 ? `${b.mesi / 12} anni` : `${b.mesi} mesi`}` : b.finoAl ? `bloccato fino al ${b.finoAl}` : "durata non indicata";
 }

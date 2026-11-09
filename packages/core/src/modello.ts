@@ -109,6 +109,16 @@ export interface Offerta {
   /** Campi derivati utili a pagella e filtri. */
   derivati: {
     haPenaleRecesso: boolean;
+    /** Mesi di vincolo della penale e importo, se ricavabili dai testi (vedi penale.ts). */
+    penaleMesi?: number;
+    penaleImporto?: number;
+    penaleFinoAl?: string;
+    penaleMassimo?: boolean;
+    /** Per quanto resta bloccato un prezzo fisso, se l'offerta non ha una durata ma lo scrive nella descrizione. */
+    bloccoMesi?: number;
+    bloccoFinoAl?: string;
+    /** true se i campi penale* e blocco* sono già stati ricavati dai testi completi (in pipeline). */
+    penaleCalcolata?: boolean;
     haCondizioniLimitanti: boolean;
     haServiziAggiuntivi: boolean;
     disponibileOvunque: boolean;

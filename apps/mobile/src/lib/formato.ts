@@ -1,5 +1,5 @@
 /** Formati all'italiana, senza dipendere da Intl (non uguale su tutti i telefoni). */
-import type { Offerta, RisultatoOfferta } from "@pagella/core";
+import { bloccoPrezzo, type Offerta, type RisultatoOfferta } from "@pagella/core";
 
 export function numero(x: number): string {
   const n = Math.round(Math.abs(x)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -61,7 +61,12 @@ export function fattiOfferta(r: RisultatoOfferta, quotaLetta?: number): Fatto[] 
   const quota: Fatto = { etichetta: "Quota fissa", valore: Number.isInteger(q) ? String(q) : decimali(q, 2), nota: "€/mese" };
   const tipo: Fatto = o.prezzo === "variabile" ? { etichetta: "Tipo di prezzo", valore: "Variabile", nota: "cambia ogni mese" }
     : o.prezzo === "misto" ? { etichetta: "Tipo di prezzo", valore: "Misto", nota: "in parte fisso" }
-    : o.durataMesi && o.durataMesi < 99 ? { etichetta: "Tipo di prezzo", valore: "Fisso", nota: `bloccato ${o.durataMesi} mesi` }
-    : { etichetta: "Tipo di prezzo", valore: "Fisso", nota: "durata indeterminata" };
+    : { etichetta: "Tipo di prezzo", valore: "Fisso", nota: notaBlocco(o) };
   return [prezzo, quota, tipo];
+}
+
+/** "bloccato 36 mesi", "bloccato fino al 31/12/2031", "bloccato 10 anni". */
+function notaBlocco(o: Offerta): string {
+  const b = bloccoPrezzo(o);
+  return b.mesi ? `bloccato ${b.mesi >= 60 && b.mesi % 12 === 0 ? `${b.mesi / 12} anni` : `${b.mesi} mesi`}` : b.finoAl ? `bloccato fino al ${b.finoAl}` : "durata non indicata";
 }

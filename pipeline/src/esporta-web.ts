@@ -9,7 +9,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { gunzipSync } from "node:zlib";
-import { classifica, creaScenari, type Fotografia, type Offerta, type RisultatoOfferta } from "@pagella/core";
+import { classifica, conPenaleCalcolata, creaScenari, type Fotografia, type Offerta, type RisultatoOfferta } from "@pagella/core";
 import { leggiIndiciCsv } from "./leggi-indici.js";
 
 const [, , fotoPath, indiciPath, comuniPath, outDir] = process.argv;
@@ -23,7 +23,9 @@ const storico = leggiIndiciCsv(await readFile(indiciPath, "utf8"));
 const scenari = creaScenari(storico);
 
 /** Toglie i testi lunghi che il browser non usa; tiene il testo delle penali (accorciato). */
-function snella(o: Offerta): Offerta {
+function snella(intera: Offerta): Offerta {
+  // Durata e importo della penale si ricavano dai testi completi, prima di accorciarli.
+  const o = conPenaleCalcolata(intera);
   return {
     ...o,
     descrizione: o.descrizione.slice(0, 160),
