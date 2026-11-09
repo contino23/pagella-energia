@@ -12,7 +12,7 @@ import { useStato } from "../lib/stato";
 import { C, F, R } from "../lib/tema";
 
 type Filtro = "tutte" | "fisso" | "variabile" | "fissoPulite" | "variabilePulite";
-const FILTRI: Array<[Filtro, string]> = [["tutte", "Tutte"], ["fisso", "Prezzo fisso"], ["variabile", "Variabile"], ["fissoPulite", "Fisso senza penali né costi extra"], ["variabilePulite", "Variabile senza penali né costi extra"]];
+const FILTRI: Array<[Filtro, string]> = [["tutte", "Tutte"], ["fisso", "Prezzo fisso"], ["variabile", "Variabile"], ["fissoPulite", "Fisso senza penali"], ["variabilePulite", "Variabile senza penali"]];
 
 export default function Risultati() {
   const { dati, profilo: p } = useStato();
