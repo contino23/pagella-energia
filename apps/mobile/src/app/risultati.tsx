@@ -38,7 +38,7 @@ export default function Risultati() {
       <View style={{ padding: 20, gap: 14 }}>
         <Text style={st.h2}>Ci servono due dati</Text>
         <Tenue>Con il consumo annuo e il comune ti mostriamo le offerte davvero disponibili per te, con la spesa giusta. Il consumo lo trovi in bolletta; se non lo sai, lo stimiamo con poche domande.</Tenue>
-        <Pulsante titolo="Inserisci i tuoi dati" onPress={() => router.push("/dati")} />
+        <Pulsante titolo="Inserisci i tuoi dati" onPress={() => router.replace("/guidato")} />
       </View>
     );
   }

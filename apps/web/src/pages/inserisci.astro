@@ -1,0 +1,141 @@
+---
+import Base from "../layouts/Base.astro";
+import { ICONE } from "../scripts/formato";
+
+const grande = (svg: string) => svg.replace(/width="16" height="16"/, 'width="28" height="28"');
+const USI_LUCE = [
+  ["induzione", "Piano a induzione o forno elettrico", "Si cucina a corrente"],
+  ["scaldabagno", "Scaldabagno elettrico", "L'acqua calda la fa la corrente, non il gas"],
+  ["condizionatore", "Condizionatore", "Acceso d'estate"],
+  ["pompaDiCalore", "Riscaldamento elettrico", "Pompa di calore o stufette elettriche d'inverno"],
+  ["autoElettrica", "Auto elettrica", "Ricaricata a casa"],
+];
+const USI_GAS = [
+  ["cucina", "Fornelli", "Per cucinare"],
+  ["acquaCalda", "Acqua calda", "Caldaia o scaldabagno a gas"],
+  ["riscaldamento", "Riscaldamento", "Caldaia autonoma, non centralizzato"],
+];
+const POTENZE = ["1,5", "3", "4,5", "6"];
+const ZONE = [["B", "molto calda"], ["C", "calda"], ["D", "temperata"], ["E", "fredda"], ["F", "molto fredda"]];
+---
+<Base titolo="Inserisci i tuoi dati · Pagella Energia" descrizione="Poche domande per confrontare le offerte luce e gas giuste per te, anche se non conosci il tuo consumo." pagina="risultati">
+  <div class="wrap guida">
+    <div class="guida-testa">
+      <div class="guida-avanzamento" aria-hidden="true"><div id="barra"></div></div>
+      <span id="passo-n" aria-live="polite"></span>
+    </div>
+
+    <form id="guida" novalidate autocomplete="off">
+      <section class="passo" data-passo="fornitura" data-gruppo="1">
+        <h1>Cosa vuoi confrontare?</h1>
+        <div class="carte carte-2" role="radiogroup" aria-label="Luce o gas">
+          <label class="carta carta-luce"><input type="radio" name="c" value="luce" class="sr" data-avanti />
+            <span class="carta-icona" set:html={grande(ICONE.fulmine)} /><strong>Luce</strong><small>Bolletta dell'elettricità</small></label>
+          <label class="carta carta-gas"><input type="radio" name="c" value="gas" class="sr" data-avanti />
+            <span class="carta-icona" set:html={grande(ICONE.fiamma)} /><strong>Gas</strong><small>Bolletta del gas metano</small></label>
+        </div>
+      </section>
+
+      <section class="passo" data-passo="comune" data-gruppo="2" hidden>
+        <h1>In che comune è la casa?</h1>
+        <p class="guida-aiuto">Ci serve per mostrarti le offerte disponibili dove abiti.</p>
+        <input class="guida-input" type="text" id="comune" placeholder="Scrivi il nome del comune" aria-describedby="err-comune" autocapitalize="words" spellcheck="false" />
+        <ul class="suggerimenti" id="suggerimenti" role="listbox" aria-label="Comuni"></ul>
+        <p class="guida-errore" id="err-comune" hidden></p>
+      </section>
+
+      <section class="passo" data-passo="sai" data-gruppo="3" hidden>
+        <h1>Sai quanto consumi in un anno?</h1>
+        <p class="guida-aiuto">È scritto in bolletta, di solito alla voce "consumo annuo". Se non lo sai, nessun problema: lo stimiamo insieme.</p>
+        <div class="carte">
+          <label class="carta carta-riga"><input type="radio" name="sai" value="si" class="sr" />
+            <strong>Sì, lo so</strong><small>Lo scrivo io</small></label>
+          <div class="campo-consumo" id="campo-consumo" hidden>
+            <div class="guida-input-unita"><input class="guida-input" type="text" inputmode="numeric" id="cons" aria-describedby="err-cons" /><span class="unita"></span></div>
+            <p class="guida-errore" id="err-cons" hidden></p>
+          </div>
+          <label class="carta carta-riga"><input type="radio" name="sai" value="no" class="sr" data-avanti />
+            <strong>No, aiutami a stimarlo</strong><small>Tre domande veloci</small></label>
+        </div>
+      </section>
+
+      <section class="passo" data-passo="persone" data-gruppo="3" hidden>
+        <h1>Quante persone vivono in casa?</h1>
+        <div class="pillole pillole-grandi" role="radiogroup" aria-label="Persone in casa">
+          {[1, 2, 3, 4, 5].map((n) => <label><input type="radio" name="persone" value={n} class="sr" data-avanti /><span>{n === 5 ? "5 o più" : n}</span></label>)}
+        </div>
+      </section>
+
+      <section class="passo" data-passo="usi" data-gruppo="3" hidden>
+        <h1 data-solo="luce">Cosa c'è in casa che va a corrente?</h1>
+        <h1 data-solo="gas">Per cosa usi il gas?</h1>
+        <p class="guida-aiuto" data-solo="luce">Tocca quelli che hai. Frigo, lavatrice, luci e TV li contiamo già. Se non hai niente di questi, vai avanti.</p>
+        <p class="guida-aiuto" data-solo="gas">Tocca quelli che hai.</p>
+        <div class="carte">
+          {USI_LUCE.map(([k, t, s]) => <label class="carta carta-riga carta-spunta" data-solo="luce"><input type="checkbox" name={k} class="sr" /><strong>{t}</strong><small>{s}</small></label>)}
+          {USI_GAS.map(([k, t, s]) => <label class="carta carta-riga carta-spunta" data-solo="gas"><input type="checkbox" name={k} class="sr" checked /><strong>{t}</strong><small>{s}</small></label>)}
+        </div>
+        <div id="campo-mq" data-solo="gas">
+          <label class="guida-etichetta" for="mq">Quanti metri quadri riscaldi, più o meno?</label>
+          <div class="guida-input-unita"><input class="guida-input" type="text" inputmode="numeric" id="mq" value="80" /><span>m²</span></div>
+        </div>
+      </section>
+
+      <section class="passo" data-passo="stima" data-gruppo="3" hidden>
+        <p class="occhiello">La nostra stima</p>
+        <h1>Consumi circa <span id="stima-valore"></span> all'anno</h1>
+        <p class="guida-aiuto" id="stima-spiega"></p>
+        <label class="guida-etichetta" for="cons-stima">Se vuoi, correggilo</label>
+        <div class="guida-input-unita"><input class="guida-input" type="text" inputmode="numeric" id="cons-stima" /><span class="unita"></span></div>
+        <p class="guida-nota">È una stima indicativa: se un giorno trovi il consumo in bolletta, usa quello.</p>
+      </section>
+
+      <section class="passo" data-passo="dettagli" data-gruppo="4" hidden>
+        <h1 data-solo="luce">Ultimi due dettagli</h1>
+        <h1 data-solo="gas">Un ultimo dettaglio</h1>
+        <p class="guida-aiuto">Li abbiamo già impostati sul caso più comune: cambiali solo se sai che per te è diverso.</p>
+        <fieldset data-solo="luce">
+          <legend>Potenza del contatore</legend>
+          <div class="pillole pillole-grandi">
+            {POTENZE.map((k) => <label><input type="radio" name="kw" value={k.replace(",", ".")} class="sr" /><span>{k} kW</span></label>)}
+          </div>
+          <small>Quasi tutte le case hanno 3 kW. Se non lo sai, lascia così.</small>
+        </fieldset>
+        <fieldset data-solo="luce">
+          <legend>È la casa dove hai la residenza?</legend>
+          <div class="pillole pillole-grandi">
+            <label><input type="radio" name="res" value="1" class="sr" /><span>Sì</span></label>
+            <label><input type="radio" name="res" value="0" class="sr" /><span>No, è una seconda casa</span></label>
+          </div>
+        </fieldset>
+        <fieldset data-solo="gas">
+          <legend>Zona climatica</legend>
+          <div class="pillole">
+            {ZONE.map(([z, d]) => <label><input type="radio" name="zona" value={z} class="sr" /><span>{z} · {d}</span></label>)}
+          </div>
+          <small id="zona-nota">L'abbiamo proposta in base al tuo comune.</small>
+        </fieldset>
+      </section>
+
+      <section class="passo" data-passo="voto" data-gruppo="5" hidden>
+        <h1>Vuoi anche il voto della tua offerta attuale?</h1>
+        <p class="guida-aiuto">Facoltativo. Senza questi dati ti mostriamo comunque le offerte migliori.</p>
+        <label class="guida-etichetta" for="spesa">Quanto spendi all'anno, più o meno?</label>
+        <div class="guida-input-unita"><input class="guida-input" type="text" inputmode="numeric" id="spesa" /><span>€</span></div>
+        <label class="guida-etichetta" for="cod">Codice della tua offerta <small>(se ce l'hai sotto mano)</small></label>
+        <input class="guida-input" type="text" id="cod" spellcheck="false" autocapitalize="characters" style="font-size:16px" />
+        <p class="guida-nota">Lo trovi in bolletta nel riquadro "Box dell'offerta". Con il codice il voto è più preciso.</p>
+      </section>
+
+      <div class="guida-azioni">
+        <button type="button" class="guida-indietro" id="indietro">← Indietro</button>
+        <button type="submit" class="pe-btn" id="avanti">Avanti</button>
+      </div>
+    </form>
+    <p class="guida-privacy">I dati restano sul tuo dispositivo: nessuna registrazione, nessuna email.</p>
+  </div>
+</Base>
+
+<script>
+  import "../scripts/guidato";
+</script>

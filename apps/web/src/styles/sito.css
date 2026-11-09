@@ -306,3 +306,71 @@ input[aria-invalid="true"] { border-color: var(--warn) !important; }
 .incompleto p { margin: 0; color: var(--ink-muted); font-size: 16px; line-height: 1.5; }
 /* "hidden" vince sempre sugli stili dei componenti (campi solo luce/gas, risparmio vuoto, pulsanti). */
 [hidden] { display: none !important; }
+
+/* ---------- Percorso guidato per l'inserimento manuale ---------- */
+.guida { max-width: 620px; padding-top: 28px; padding-bottom: 48px; }
+.guida-testa { display: flex; flex-direction: column; gap: 8px; margin-bottom: 28px; }
+.guida-avanzamento { height: 6px; border-radius: 999px; background: var(--surface-muted); overflow: hidden; }
+.guida-avanzamento div { height: 100%; width: 20%; background: var(--ink); border-radius: 999px; transition: width .25s; }
+#passo-n { font-size: 13px; font-weight: 700; color: var(--ink-muted); letter-spacing: .02em; }
+.guida form { display: flex; flex-direction: column; gap: 28px; }
+.passo { display: flex; flex-direction: column; gap: 14px; }
+.passo h1 { margin: 0; font-size: clamp(26px, 6vw, 34px); line-height: 1.15; letter-spacing: -0.02em; outline: none; }
+.passo .occhiello { margin: 0 0 -6px; }
+.guida-aiuto { margin: 0; font-size: 16.5px; line-height: 1.5; color: var(--ink-muted); }
+.guida-nota { margin: 0; font-size: 14px; line-height: 1.5; color: var(--ink-muted); }
+.guida-etichetta { font-weight: 700; font-size: 15.5px; margin-top: 6px; }
+.guida-etichetta small { font-weight: 500; color: var(--ink-muted); }
+.guida-input { width: 100%; height: 56px; border: 1.5px solid var(--line-strong); border-radius: 12px; padding: 0 16px; font: inherit; font-size: 18px; color: var(--ink); background: var(--surface); box-sizing: border-box; }
+.guida-input:focus { outline: 2px solid var(--focus-ring); outline-offset: 1px; border-color: var(--ink); }
+.guida-input[aria-invalid="true"] { border-color: var(--warn); }
+.guida-input-unita { position: relative; }
+.guida-input-unita .guida-input { padding-right: 64px; font-variant-numeric: tabular-nums; }
+.guida-input-unita > span { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-weight: 700; color: var(--ink-muted); pointer-events: none; }
+.guida-errore { margin: 0; color: var(--warn); font-weight: 700; font-size: 15px; }
+.carte { display: flex; flex-direction: column; gap: 10px; }
+.carte-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.carta { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 18px; border: 1.5px solid var(--line-strong); border-radius: 16px; background: var(--surface); cursor: pointer; transition: border-color .15s, background .15s; }
+.carta:hover { border-color: var(--ink); }
+.carta strong { font-size: 17px; }
+.carta small { font-size: 14px; color: var(--ink-muted); line-height: 1.4; }
+.carte-2 .carta { align-items: flex-start; padding: 22px 20px; gap: 6px; }
+.carte-2 .carta strong { font-size: 20px; margin-top: 6px; }
+.carta-icona { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; }
+.carta-luce .carta-icona { background: var(--luce); color: var(--ink); }
+.carta-gas .carta-icona { background: var(--gas); color: var(--on-ink); }
+.carta:has(input:checked) { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.carta-luce:has(input:checked) { background: var(--luce-tint); }
+.carta-gas:has(input:checked) { background: var(--gas-tint); }
+.carta:has(input:focus-visible) { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.carta-riga { padding-right: 56px; }
+.carta-spunta::after { content: ""; position: absolute; right: 18px; top: 50%; width: 24px; height: 24px; margin-top: -12px; border-radius: 7px; border: 1.5px solid var(--line-strong); background: var(--surface); }
+.carta-spunta:has(input:checked)::after { background: var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/16px no-repeat; border-color: var(--ink); }
+.carta-spunta:has(input:checked) { background: var(--surface-muted); }
+.campo-consumo { display: flex; flex-direction: column; gap: 8px; margin: -2px 0 6px; }
+.pillole-grandi span { height: 52px; min-width: 60px; padding: 0 20px; font-size: 17px; }
+.passo fieldset { border: 0; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.passo legend { font-weight: 700; font-size: 16px; padding: 0; margin-bottom: 10px; }
+.passo fieldset small { font-size: 14px; color: var(--ink-muted); }
+.suggerimenti { list-style: none; margin: -6px 0 0; padding: 0; border-radius: 12px; overflow: hidden; border: 1.5px solid var(--line); }
+.suggerimenti:empty { display: none; }
+.suggerimenti li + li { border-top: 1px solid var(--line); }
+.suggerimenti button { width: 100%; text-align: left; min-height: 52px; padding: 0 16px; background: var(--surface); border: 0; font: inherit; font-size: 17px; font-weight: 600; color: var(--ink); cursor: pointer; }
+.suggerimenti button:hover, .suggerimenti button:focus-visible { background: var(--surface-muted); }
+.suggerimenti button span { font-weight: 400; color: var(--ink-muted); }
+.suggerimenti .nessuno { padding: 14px 16px; color: var(--ink-muted); }
+.guida-azioni { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 8px; }
+.guida-azioni .pe-btn { height: 54px; min-width: 160px; font-size: 17px; margin-left: auto; }
+.guida-indietro { background: none; border: 0; font: inherit; font-weight: 700; font-size: 16px; color: var(--ink-muted); cursor: pointer; min-height: var(--touch-target); padding: 0 4px; }
+.guida-indietro:hover { color: var(--ink); }
+.guida-privacy { margin: 32px 0 0; font-size: 13.5px; color: var(--ink-muted); text-align: center; }
+@media (max-width: 560px) {
+  .guida { padding-top: 16px; }
+  .carte-2 { grid-template-columns: 1fr; }
+  .carte-2 .carta { flex-direction: row; align-items: center; gap: 14px; padding: 16px; }
+  .carte-2 .carta strong { margin-top: 0; }
+  .carte-2 .carta small { display: none; }
+  .guida-azioni { position: sticky; bottom: 0; background: var(--surface); padding: 12px 0 calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
+  .guida-azioni .pe-btn { flex: 1; }
+}
+.link-stima { margin-top: -4px; font-size: 14.5px; font-weight: 700; color: var(--ink); }

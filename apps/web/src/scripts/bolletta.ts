@@ -157,7 +157,7 @@ export function collegaCaricatore(area: HTMLElement, input: HTMLInputElement, st
         <dl class="lettura-dati">${righe.map((r) => `<div class="${r.valore ? "" : "manca"}"><dt>${h(r.etichetta)}</dt><dd>${r.valore ? `${h(r.valore)}${r.nota ? `<small>${h(r.nota)}</small>` : ""}` : "Non trovato, lo potrai inserire tu"}</dd></div>`).join("")}</dl>
         ${htmlEsito(esito)}
         <a class="pe-btn" href="${h(indirizzoRisultati(esito))}" data-conferma>Vedi il voto e le offerte</a>
-        <span class="lettura-sotto">${mancanti ? "Potrai correggere o completare i dati nella pagina dei risultati." : "Se qualcosa non torna, potrai correggerlo nella pagina dei risultati."} <button type="button" class="lettura-altra">Carica un'altra bolletta</button></span>`);
+        <span class="lettura-sotto">${mancanti ? "Ti chiederemo i dati che mancano, con poche domande." : "Se qualcosa non torna, potrai correggerlo nella pagina dei risultati."} <button type="button" class="lettura-altra">Carica un'altra bolletta</button></span>`);
       pannello.querySelector<HTMLAnchorElement>("[data-conferma]")!.focus();
       pannello.querySelector("[data-conferma]")!.addEventListener("click", () => {
         // Sulla pagina risultati cambia solo il #: chiudiamo il pannello e torniamo in cima.

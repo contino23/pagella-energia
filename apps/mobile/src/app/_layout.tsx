@@ -32,6 +32,7 @@ export default function Layout() {
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="lettura" options={{ title: "La tua bolletta" }} />
           <Stack.Screen name="risultati" options={{ title: "Offerte per te" }} />
+          <Stack.Screen name="guidato" options={{ title: "I tuoi dati" }} />
           <Stack.Screen name="dati" options={{ title: "I tuoi dati", presentation: "modal" }} />
           <Stack.Screen name="metodo" options={{ title: "Come calcoliamo" }} />
         </Stack>

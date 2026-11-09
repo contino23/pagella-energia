@@ -24,7 +24,7 @@ export default function Home() {
 
   function aMano() {
     impostaProfilo(profiloIniziale());
-    router.push("/dati");
+    router.push("/guidato");
   }
 
   return (

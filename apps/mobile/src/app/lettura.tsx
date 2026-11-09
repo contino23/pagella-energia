@@ -5,7 +5,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Avviso, Chip, Pulsante, Sottotitolo, T, Tenue } from "../components/ui";
-import { zonaPerComune } from "../lib/calcolo";
+import { profiloIniziale, zonaPerComune } from "../lib/calcolo";
 import type { Comune } from "../lib/dati";
 import { decimali, euro, numero } from "../lib/formato";
 import { useLettorePdf } from "../lib/lettore";
@@ -73,14 +73,14 @@ export default function Lettura() {
       daBolletta: true,
     });
     // Se in bolletta mancano consumo o comune, li chiediamo prima di mostrare le offerte.
-    router.replace(d.consumoAnnuo && comune ? "/risultati" : "/dati");
+    router.replace(d.consumoAnnuo && comune ? "/risultati" : "/guidato");
   }
 
   if (errore) {
     return (
       <View style={st.pagina}>
         <Avviso tipo="warn" testo={errore} />
-        <Pulsante titolo="Inserisci i dati a mano" onPress={() => router.replace("/dati")} />
+        <Pulsante titolo="Inserisci i dati a mano" onPress={() => { impostaProfilo(profiloIniziale()); router.replace("/guidato"); }} />
         <Pulsante titolo="Torna indietro" tipo="secondario" onPress={() => router.back()} />
       </View>
     );
@@ -144,7 +144,7 @@ export default function Lettura() {
       </View>
       <Avviso tipo={nota.tipo} testo={nota.t} />
       <Pulsante titolo="Vedi il voto e le offerte" onPress={conferma} />
-      <T style={{ color: C.inkMuted, fontSize: 14 }}>Se qualcosa non torna, potrai correggerlo nella schermata dei risultati.</T>
+      <T style={{ color: C.inkMuted, fontSize: 14 }}>Se qualcosa non torna, potrai correggerlo dopo. Se manca qualcosa, te lo chiediamo noi.</T>
     </ScrollView>
   );
 }

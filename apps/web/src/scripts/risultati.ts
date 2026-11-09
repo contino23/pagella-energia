@@ -2,7 +2,7 @@
  * Pagina risultati: legge i dati dal # dell'indirizzo (o dal modulo), calcola nel browser
  * la classifica con @pagella/core e disegna le schede. Nessun dato lascia il dispositivo.
  */
-import { classifica, offertaDaBolletta, stimaConsumoGas, stimaConsumoLuce, valutaOfferta, votoPrezzo, ZONA_CLIMATICA_TIPICA, type Persone, type DatiBolletta, type Offerta, type ProfiloClassifica, type RisultatoOfferta, type VocePagella } from "@pagella/core";
+import { classifica, offertaDaBolletta, valutaOfferta, votoPrezzo, ZONA_CLIMATICA_TIPICA, type DatiBolletta, type Offerta, type ProfiloClassifica, type RisultatoOfferta, type VocePagella } from "@pagella/core";
 import { collegaCaricatore } from "./bolletta.js";
 import { caricaComuni, caricaMercato, caricaOfferte, type Comune, type Mercato } from "./dati.js";
 import { classeVoto, descriviPrezzo, dominio, euro, fattiOfferta, h, ICONE, nomeLeggibile, numero, prezzoKwh, voto } from "./formato.js";
@@ -288,22 +288,15 @@ function disegnaTua(s: Stato) {
 /** Consumo e comune sono obbligatori: senza, la classifica sarebbe fuorviante. */
 const completo = (s: Stato) => s.cons > 0 && !!s.comune;
 
-function mostraIncompleto(s: Stato) {
-  ultimo = s;
-  const manca = [!(s.cons > 0) && "il consumo annuo", !s.comune && "il comune"].filter(Boolean).join(" e ");
-  $("#tua-offerta").innerHTML = `<span class="occhiello">I tuoi dati</span><p style="margin:0;font-size:15px;line-height:1.5">Per confrontare le offerte in modo giusto ci servono ${h(manca)}. Inseriscili qui sotto: se non conosci il consumo, lo stimiamo insieme con poche domande.</p>`;
-  $("#risparmio").hidden = true;
-  $("#conteggio").textContent = "";
-  $("#altre").hidden = true;
-  $(".filtri").hidden = true;
-  $("#fonte").textContent = "";
-  $("#vai-dati").innerHTML = `<span>Mancano ${h(manca)}</span><strong>Inserisci</strong>`;
-  $("#lista").innerHTML = `<div class="incompleto"><h2>Ci servono due dati</h2><p>Con il <strong>consumo annuo</strong> e il <strong>comune</strong> ti mostriamo le offerte davvero disponibili per te, con la spesa giusta. Il consumo lo trovi in bolletta; se non lo sai, lo stimiamo con poche domande.</p><a class="pe-btn" href="#dati">Inserisci i tuoi dati</a></div>`;
+/** Senza consumo o comune si passa dal percorso guidato, che parte da cosa manca. */
+const URL_GUIDATO = `${import.meta.env.BASE_URL.replace(/\/?$/, "/")}inserisci/`;
+function mostraIncompleto(_s: Stato) {
+  location.replace(`${URL_GUIDATO}${location.hash}`);
 }
 
 function segnaErrori(s: Stato): boolean {
   const campi: Array<[string, string, string | null]> = [
-    ["cons", "err-cons", s.cons > 0 ? null : "Inserisci il consumo annuo, oppure stimalo con le domande qui sotto."],
+    ["cons", "err-cons", s.cons > 0 ? null : "Inserisci il consumo annuo, oppure stimalo con il link qui sotto."],
     ["comune", "err-comune", s.comune ? null : "Scegli il comune dall'elenco che compare mentre scrivi."],
   ];
   let primo: HTMLInputElement | null = null;
@@ -315,36 +308,8 @@ function segnaErrori(s: Stato): boolean {
     err.textContent = msg ?? "";
     if (msg && !primo) primo = input;
   }
-  if (!(s.cons > 0)) ($("#stima") as HTMLDetailsElement).open = true;
   primo?.focus();
   return !primo;
-}
-
-function aggiornaStima(): number {
-  const f = form.elements;
-  const val = (n: string) => (f.namedItem(n) as HTMLInputElement | null);
-  const persone = Number((form.querySelector<HTMLInputElement>('input[name="st-persone"]:checked'))?.value ?? 3) as Persone;
-  const gas = (f.namedItem("gas") as HTMLInputElement).checked;
-  const stima = gas
-    ? stimaConsumoGas({
-        persone,
-        cucina: !!val("st-cucina")?.checked,
-        acquaCalda: !!val("st-acquaCalda")?.checked,
-        riscaldamento: !!val("st-riscaldamento")?.checked,
-        metriQuadri: Number((val("st-mq")?.value ?? "80").replace(/\D/g, "")) || 0,
-        zona: (f.namedItem("zona") as HTMLSelectElement).value as "D",
-      })
-    : stimaConsumoLuce({
-        persone,
-        induzione: !!val("st-induzione")?.checked,
-        scaldabagno: !!val("st-scaldabagno")?.checked,
-        condizionatore: !!val("st-condizionatore")?.checked,
-        pompaDiCalore: !!val("st-pompaDiCalore")?.checked,
-        autoElettrica: !!val("st-autoElettrica")?.checked,
-      });
-  $("#campo-mq").hidden = !gas || !val("st-riscaldamento")?.checked;
-  $("#stima-valore").textContent = `${numero(stima)} ${gas ? "Smc" : "kWh"} l'anno`;
-  return stima;
 }
 
 function calcola(s: Stato) {
@@ -369,6 +334,7 @@ function calcola(s: Stato) {
   }
   riferimento = tua ? tua.stima.totale : spesaDichiarata ?? null;
   ultimo = s;
+  $<HTMLAnchorElement>("#link-stima").href = `${URL_GUIDATO}${location.hash}`;
   mostrate = 10;
   aperte = new Set();
   chiuse = new Set();
@@ -383,6 +349,8 @@ function calcola(s: Stato) {
 }
 
 async function avvia() {
+  const iniziale = leggiHash();
+  if (!completo(iniziale)) return mostraIncompleto(iniziale);
   $("#lista").innerHTML = `<div class="vuoto">Sto confrontando le offerte sul tuo dispositivo…</div>`;
   [mercato, offerte, comuni] = await Promise.all([caricaMercato(), caricaOfferte(), caricaComuni()]);
   const lista = $<HTMLDataListElement>("#elenco-comuni");
@@ -397,7 +365,6 @@ async function avvia() {
     const t = e.target as HTMLInputElement;
     if (t.name === "commodity") {
       aggiornaCampi(t.value as "luce" | "gas");
-      aggiornaStima();
       (form.elements.namedItem("cons") as HTMLInputElement).value = "";
       (form.elements.namedItem("cod") as HTMLInputElement).value = "";
     }
@@ -407,20 +374,7 @@ async function avvia() {
     const t = (form.elements.namedItem("comune") as HTMLInputElement).value.trim().toLowerCase();
     const c = comuni.find((x) => etichettaComune(x).toLowerCase() === t);
     if (c) (form.elements.namedItem("zona") as HTMLSelectElement).value = ZONA_CLIMATICA_TIPICA[c.regione] ?? "D";
-    aggiornaStima();
   });
-  $("#stima").addEventListener("input", aggiornaStima);
-  $("#stima").addEventListener("change", aggiornaStima);
-  $("#stima").addEventListener("toggle", aggiornaStima);
-  $("#usa-stima").addEventListener("click", () => {
-    const cons = form.elements.namedItem("cons") as HTMLInputElement;
-    cons.value = String(aggiornaStima());
-    cons.setAttribute("aria-invalid", "false");
-    $("#err-cons").hidden = true;
-    ($("#stima") as HTMLDetailsElement).open = false;
-    cons.focus();
-  });
-  aggiornaStima();
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();

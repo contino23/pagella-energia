@@ -25,40 +25,7 @@ import { ICONE } from "../scripts/formato";
           <small>Lo trovi in bolletta, alla voce "consumo annuo".</small>
           <small class="errore-campo" id="err-cons" hidden></small>
         </label>
-        <details class="stima" id="stima">
-          <summary>Non lo sai? Stimalo con poche domande</summary>
-          <div class="stima-corpo">
-            <fieldset>
-              <legend>Quante persone vivono in casa?</legend>
-              <div class="pillole">
-                {[1, 2, 3, 4, 5].map((n) => <label><input type="radio" name="st-persone" value={n} checked={n === 3} class="sr" /><span>{n === 5 ? "5 o più" : n}</span></label>)}
-              </div>
-            </fieldset>
-            <fieldset data-solo="luce">
-              <legend>Cosa usi a corrente? <small>(anche più di una)</small></legend>
-              <label class="scelta"><input type="checkbox" name="st-induzione" />Piano a induzione o forno elettrico</label>
-              <label class="scelta"><input type="checkbox" name="st-scaldabagno" />Scaldabagno elettrico per l'acqua calda</label>
-              <label class="scelta"><input type="checkbox" name="st-condizionatore" />Condizionatore d'estate</label>
-              <label class="scelta"><input type="checkbox" name="st-pompaDiCalore" />Riscaldamento con pompa di calore o stufe elettriche</label>
-              <label class="scelta"><input type="checkbox" name="st-autoElettrica" />Auto elettrica ricaricata a casa</label>
-            </fieldset>
-            <fieldset data-solo="gas">
-              <legend>Per cosa usi il gas?</legend>
-              <label class="scelta"><input type="checkbox" name="st-cucina" checked />Cucina</label>
-              <label class="scelta"><input type="checkbox" name="st-acquaCalda" checked />Acqua calda</label>
-              <label class="scelta"><input type="checkbox" name="st-riscaldamento" checked />Riscaldamento autonomo</label>
-            </fieldset>
-            <label class="campo" data-solo="gas" id="campo-mq">Metri quadri da riscaldare
-              <input type="text" inputmode="numeric" name="st-mq" value="80" autocomplete="off" />
-              <small>La zona climatica la prendiamo dal comune.</small>
-            </label>
-            <div class="stima-risultato">
-              <span>Stima: <strong id="stima-valore">—</strong></span>
-              <button type="button" class="pe-btn-secondary" id="usa-stima">Usa questa stima</button>
-            </div>
-            <small>È una stima indicativa: se trovi il consumo in bolletta, usa quello.</small>
-          </div>
-        </details>
+        <a class="link-stima" id="link-stima" href="../inserisci/">Non sai il consumo? Stimalo con poche domande →</a>
         <label class="campo" for="kw" data-solo="luce">Potenza impegnata (kW) <small>3 kW è la più comune; la trovi in bolletta</small>
           <input type="text" inputmode="decimal" id="kw" name="kw" autocomplete="off" />
         </label>
