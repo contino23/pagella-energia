@@ -11,8 +11,8 @@ import { decimali, descriviPrezzo, euro, giudizio, nomeLeggibile, numero } from 
 import { useStato } from "../lib/stato";
 import { C, F, R } from "../lib/tema";
 
-type Filtro = "tutte" | "fisso" | "variabile" | "pulite";
-const FILTRI: Array<[Filtro, string]> = [["tutte", "Tutte"], ["fisso", "Prezzo fisso"], ["variabile", "Variabile"], ["pulite", "Senza penali né costi extra"]];
+type Filtro = "tutte" | "fisso" | "variabile" | "fissoPulite" | "variabilePulite";
+const FILTRI: Array<[Filtro, string]> = [["tutte", "Tutte"], ["fisso", "Prezzo fisso"], ["variabile", "Variabile"], ["fissoPulite", "Fisso senza penali né costi extra"], ["variabilePulite", "Variabile senza penali né costi extra"]];
 
 export default function Risultati() {
   const { dati, profilo: p } = useStato();
@@ -30,7 +30,7 @@ export default function Risultati() {
   }, [p, dati]);
 
   const lista = useMemo(() => (esito?.risultati ?? []).filter((r) =>
-    filtro === "fisso" ? r.offerta.prezzo === "fisso" : filtro === "variabile" ? r.offerta.prezzo === "variabile" : filtro === "pulite" ? r.avvisi.every((a) => a.tipo !== "warn") : true,
+    filtro === "fisso" ? r.offerta.prezzo === "fisso" : filtro === "variabile" ? r.offerta.prezzo === "variabile" : filtro === "fissoPulite" ? r.offerta.prezzo === "fisso" && r.avvisi.every((a) => a.tipo !== "warn") : filtro === "variabilePulite" ? r.offerta.prezzo === "variabile" && r.avvisi.every((a) => a.tipo !== "warn") : true,
   ), [esito, filtro]);
 
   if (dati && !profiloCompleto(p)) {

@@ -7,7 +7,7 @@ import { collegaCaricatore } from "./bolletta.js";
 import { caricaComuni, caricaMercato, caricaOfferte, type Comune, type Mercato } from "./dati.js";
 import { classeVoto, descriviPrezzo, dominio, euro, fattiOfferta, h, ICONE, nomeLeggibile, numero, prezzoKwh, voto } from "./formato.js";
 
-type Filtro = "tutte" | "fisso" | "variabile" | "pulite";
+type Filtro = "tutte" | "fisso" | "variabile" | "fissoPulite" | "variabilePulite";
 interface Stato {
   c: "luce" | "gas";
   cons: number;
@@ -211,7 +211,7 @@ const eAperta = (codice: string, i: number) => aperte.has(codice) || (i === 0 &&
 
 function filtrati(): RisultatoOfferta[] {
   return risultati.filter((r) =>
-    filtro === "fisso" ? r.offerta.prezzo === "fisso" : filtro === "variabile" ? r.offerta.prezzo === "variabile" : filtro === "pulite" ? r.avvisi.every((a) => a.tipo !== "warn") : true,
+    filtro === "fisso" ? r.offerta.prezzo === "fisso" : filtro === "variabile" ? r.offerta.prezzo === "variabile" : filtro === "fissoPulite" ? r.offerta.prezzo === "fisso" && r.avvisi.every((a) => a.tipo !== "warn") : filtro === "variabilePulite" ? r.offerta.prezzo === "variabile" && r.avvisi.every((a) => a.tipo !== "warn") : true,
   );
 }
 
