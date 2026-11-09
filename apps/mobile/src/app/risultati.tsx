@@ -6,7 +6,7 @@ import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { Avvisi, Fatti, Pagella } from "../components/scheda";
 import { Scheda } from "../components/scheda";
 import { Caricamento, Chip, Cifra, Metro, Occhiello, Pulsante, Riquadro, T, Tenue, Voto } from "../components/ui";
-import { calcola, type Esito } from "../lib/calcolo";
+import { calcola, profiloCompleto, type Esito } from "../lib/calcolo";
 import { decimali, descriviPrezzo, euro, giudizio, nomeLeggibile, numero } from "../lib/formato";
 import { useStato } from "../lib/stato";
 import { C, F, R } from "../lib/tema";
@@ -23,7 +23,7 @@ export default function Risultati() {
 
   // Il calcolo su migliaia di offerte richiede un attimo: lo facciamo dopo aver mostrato la schermata.
   useEffect(() => {
-    if (!dati) return;
+    if (!dati || !profiloCompleto(p)) return;
     setEsito(null);
     const t = setTimeout(() => setEsito(calcola(p, dati)), 30);
     return () => clearTimeout(t);
@@ -33,6 +33,15 @@ export default function Risultati() {
     filtro === "fisso" ? r.offerta.prezzo === "fisso" : filtro === "variabile" ? r.offerta.prezzo === "variabile" : filtro === "pulite" ? r.avvisi.every((a) => a.tipo !== "warn") : true,
   ), [esito, filtro]);
 
+  if (dati && !profiloCompleto(p)) {
+    return (
+      <View style={{ padding: 20, gap: 14 }}>
+        <Text style={st.h2}>Ci servono due dati</Text>
+        <Tenue>Con il consumo annuo e il comune ti mostriamo le offerte davvero disponibili per te, con la spesa giusta. Il consumo lo trovi in bolletta; se non lo sai, lo stimiamo con poche domande.</Tenue>
+        <Pulsante titolo="Inserisci i tuoi dati" onPress={() => router.push("/dati")} />
+      </View>
+    );
+  }
   if (!dati || !esito) return <Caricamento testo="Confronto le offerte sul tuo telefono…" />;
 
   const com = dati.comuni.find((c) => c.codice === p.comune);

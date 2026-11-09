@@ -20,7 +20,10 @@ export interface Profilo {
   daBolletta: boolean;
 }
 
-export const profiloIniziale = (c: "luce" | "gas" = "luce"): Profilo => ({ c, cons: c === "gas" ? 1400 : 2700, kw: 3, res: true, zona: "D", daBolletta: false });
+export const profiloIniziale = (c: "luce" | "gas" = "luce"): Profilo => ({ c, cons: 0, kw: 3, res: true, zona: "D", daBolletta: false });
+
+/** Consumo e comune sono obbligatori: senza, la classifica sarebbe fuorviante. */
+export const profiloCompleto = (p: Profilo) => p.cons > 0 && !!p.comune;
 
 export interface Esito {
   risultati: RisultatoOfferta[];

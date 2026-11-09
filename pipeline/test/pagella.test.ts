@@ -56,3 +56,19 @@ describe("vincoli: lettura del testo sulle garanzie", () => {
     expect(con("DEPOSITO CAUZIONALE")).toBe(9);
   });
 });
+
+describe("stima dei consumi per chi non li conosce", () => {
+  it("luce: 3 persone senza apparecchi particolari è vicina alla famiglia tipo ARERA", async () => {
+    const { stimaConsumoLuce } = await import("@pagella/core");
+    expect(stimaConsumoLuce({ persone: 3 })).toBe(2500);
+    expect(stimaConsumoLuce({ persone: 4, induzione: true, condizionatore: true })).toBe(3700);
+    expect(stimaConsumoLuce({ persone: 1, pompaDiCalore: true, autoElettrica: true })).toBe(5900);
+  });
+  it("gas: cucina + acqua calda + riscaldamento di 90 m² a Roma (zona D) è vicino alla simulazione del Portale", async () => {
+    const { stimaConsumoGas } = await import("@pagella/core");
+    const smc = stimaConsumoGas({ persone: 2, cucina: true, acquaCalda: true, riscaldamento: true, metriQuadri: 90, zona: "D" });
+    expect(smc).toBeGreaterThan(1500);
+    expect(smc).toBeLessThan(1800);
+    expect(stimaConsumoGas({ persone: 3, cucina: true, acquaCalda: false, riscaldamento: false, zona: "E" })).toBe(170);
+  });
+});

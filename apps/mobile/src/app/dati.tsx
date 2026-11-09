@@ -2,6 +2,7 @@
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
+import { StimaConsumo } from "../components/stima";
 import { Pulsante, Tenue } from "../components/ui";
 import { zonaPerComune, type Profilo, type Zona } from "../lib/calcolo";
 import { useStato } from "../lib/stato";
@@ -13,7 +14,8 @@ const num = (x: string) => Number(x.replace(/\./g, "").replace(",", "."));
 export default function DatiScreen() {
   const { dati, profilo, impostaProfilo } = useStato();
   const [c, setC] = useState(profilo.c);
-  const [cons, setCons] = useState(String(profilo.cons));
+  const [cons, setCons] = useState(profilo.cons > 0 ? String(profilo.cons) : "");
+  const [errori, setErrori] = useState<{ cons?: string; comune?: string }>({});
   const [kw, setKw] = useState(String(profilo.kw).replace(".", ","));
   const [res, setRes] = useState(profilo.res);
   const [zona, setZona] = useState<Zona>(profilo.zona);
@@ -36,15 +38,20 @@ export default function DatiScreen() {
   function cambiaFornitura(nuova: "luce" | "gas") {
     if (nuova === c) return;
     setC(nuova);
-    setCons(nuova === "gas" ? "1400" : "2700");
+    setCons("");
     setCod("");
   }
 
   function salva() {
+    const e: { cons?: string; comune?: string } = {};
+    if (!(num(cons) > 0)) e.cons = "Inserisci il consumo annuo, oppure stimalo con le domande qui sotto.";
+    if (!comune) e.comune = "Scegli il comune dall'elenco che compare mentre scrivi.";
+    setErrori(e);
+    if (e.cons || e.comune) return;
     const stessaBolletta = profilo.c === c && (profilo.cod ?? "") === cod.trim().toUpperCase();
     const p: Profilo = {
       c,
-      cons: num(cons) || (c === "gas" ? 1400 : 2700),
+      cons: num(cons),
       kw: num(kw) || 3,
       res,
       zona,
@@ -72,28 +79,33 @@ export default function DatiScreen() {
           ))}
         </View>
 
-        <Campo etichetta={`Consumo annuo (${c === "gas" ? "Smc" : "kWh"})`} aiuto={`Lo trovi in bolletta, alla voce "consumo annuo".`}>
-          <TextInput style={st.input} value={cons} onChangeText={setCons} keyboardType="number-pad" />
+        <Campo etichetta={`Consumo annuo (${c === "gas" ? "Smc" : "kWh"})`} obbligatorio errore={errori.cons} aiuto={`Lo trovi in bolletta, alla voce "consumo annuo".`}>
+          <TextInput style={[st.input, errori.cons ? st.inputErrore : null]} value={cons} onChangeText={(t) => { setCons(t); setErrori({ ...errori, cons: undefined }); }} keyboardType="number-pad" />
         </Campo>
+        <StimaConsumo c={c} zona={zona} onUsa={(v) => { setCons(String(v)); setErrori({ ...errori, cons: undefined }); }} />
 
         {c === "luce" ? (
           <>
-            <Campo etichetta="Potenza impegnata (kW)">
+            <Campo etichetta="Potenza impegnata (kW)" aiuto="3 kW è la più comune; la trovi in bolletta.">
               <TextInput style={st.input} value={kw} onChangeText={setKw} keyboardType="decimal-pad" />
             </Campo>
             <View style={st.interruttore}>
-              <Text style={st.etichetta}>Residente nell'abitazione</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={st.etichetta}>Residente nell'abitazione</Text>
+                <Tenue style={{ fontSize: 13 }}>Togli la spunta se è una seconda casa</Tenue>
+              </View>
               <Switch value={res} onValueChange={setRes} trackColor={{ true: C.good, false: C.lineStrong }} thumbColor={C.surface} />
             </View>
           </>
         ) : null}
 
-        <Campo etichetta="Comune della fornitura" aiuto="Serve a includere le offerte locali. Senza comune vedi solo quelle nazionali.">
+        <Campo etichetta="Comune della fornitura" obbligatorio errore={errori.comune} aiuto="Serve per le offerte disponibili nella tua zona e, per il gas, per tasse e clima.">
           <TextInput style={st.input} value={cercaComune} placeholder="Es. Quarrata" placeholderTextColor={C.inkMuted}
-            onChangeText={(t) => { setCercaComune(t); if (!t) setComune(undefined); }} autoCorrect={false} />
+            onChangeText={(t) => { setCercaComune(t); setComune(undefined); }} autoCorrect={false} />
           {suggerimenti.map((k) => (
             <Pressable key={k.codice} style={st.suggerimento} onPress={() => {
               setComune(k.codice);
+              setErrori({ ...errori, comune: undefined });
               setCercaComune(`${k.nome} (${k.sigla})`);
               if (dati) setZona(zonaPerComune(dati, k.codice) ?? zona);
             }}>
@@ -115,10 +127,11 @@ export default function DatiScreen() {
           </Campo>
         ) : null}
 
-        <Campo etichetta="Codice della tua offerta (facoltativo)" aiuto={`Nel riquadro "Box dell'offerta" della bolletta.`}>
+        <Text style={st.sezione}>Per avere anche il voto della tua offerta <Text style={{ fontFamily: F.regular, color: C.inkMuted }}>(facoltativo)</Text></Text>
+        <Campo etichetta="Codice della tua offerta" aiuto={`Nel riquadro "Box dell'offerta" della bolletta.`}>
           <TextInput style={[st.input, { fontSize: 14 }]} value={cod} onChangeText={setCod} autoCapitalize="characters" autoCorrect={false} />
         </Campo>
-        <Campo etichetta="Quanto spendi all'anno, in euro (facoltativo)">
+        <Campo etichetta="Quanto spendi all'anno, in euro">
           <TextInput style={st.input} value={spesa} onChangeText={setSpesa} keyboardType="number-pad" />
         </Campo>
 
@@ -128,12 +141,13 @@ export default function DatiScreen() {
   );
 }
 
-function Campo({ etichetta, aiuto, children }: { etichetta: string; aiuto?: string; children: React.ReactNode }) {
+function Campo({ etichetta, aiuto, obbligatorio, errore, children }: { etichetta: string; aiuto?: string; obbligatorio?: boolean; errore?: string | undefined; children: React.ReactNode }) {
   return (
     <View style={{ gap: 6 }}>
-      <Text style={st.etichetta}>{etichetta}</Text>
+      <Text style={st.etichetta}>{etichetta}{obbligatorio ? <Text style={st.obbl}>  obbligatorio</Text> : null}</Text>
       {children}
       {aiuto ? <Tenue style={{ fontSize: 13 }}>{aiuto}</Tenue> : null}
+      {errore ? <Text style={st.errore}>{errore}</Text> : null}
     </View>
   );
 }
@@ -145,6 +159,10 @@ const st = StyleSheet.create({
   schedaTesto: { fontFamily: F.bold, fontSize: 15, color: C.inkMuted },
   etichetta: { fontFamily: F.semibold, fontSize: 15, color: C.ink },
   input: { height: 50, borderWidth: 1.5, borderColor: C.lineStrong, borderRadius: R.sm, paddingHorizontal: 14, fontFamily: F.medium, fontSize: 16, color: C.ink, backgroundColor: C.surface },
+  inputErrore: { borderColor: C.warn },
+  obbl: { fontFamily: F.bold, fontSize: 12, color: C.inkMuted },
+  errore: { fontFamily: F.bold, fontSize: 13.5, color: C.warn },
+  sezione: { fontFamily: F.bold, fontSize: 15, color: C.ink, borderTopWidth: 1, borderTopColor: C.line, paddingTop: 16 },
   interruttore: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", minHeight: 44 },
   suggerimento: { paddingVertical: 12, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: C.line },
   suggerimentoTesto: { fontFamily: F.medium, fontSize: 15, color: C.ink },

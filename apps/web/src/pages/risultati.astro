@@ -20,33 +20,70 @@ import { ICONE } from "../scripts/formato";
               <span set:html={`${ICONE.fiamma}Gas`} style="display:flex;gap:6px;align-items:center" /></label>
           </div>
         </fieldset>
-        <label class="campo" for="cons"><span>Consumo annuo (<span id="unita">kWh</span>)</span>
-          <input type="text" inputmode="numeric" id="cons" name="cons" autocomplete="off" />
+        <label class="campo" for="cons"><span>Consumo annuo (<span id="unita">kWh</span>) <em class="obbl">obbligatorio</em></span>
+          <input type="text" inputmode="numeric" id="cons" name="cons" autocomplete="off" aria-describedby="err-cons" />
           <small>Lo trovi in bolletta, alla voce "consumo annuo".</small>
+          <small class="errore-campo" id="err-cons" hidden></small>
         </label>
-        <label class="campo" for="kw" data-solo="luce">Potenza impegnata (kW)
+        <details class="stima" id="stima">
+          <summary>Non lo sai? Stimalo con poche domande</summary>
+          <div class="stima-corpo">
+            <fieldset>
+              <legend>Quante persone vivono in casa?</legend>
+              <div class="pillole">
+                {[1, 2, 3, 4, 5].map((n) => <label><input type="radio" name="st-persone" value={n} checked={n === 3} class="sr" /><span>{n === 5 ? "5 o più" : n}</span></label>)}
+              </div>
+            </fieldset>
+            <fieldset data-solo="luce">
+              <legend>Cosa usi a corrente? <small>(anche più di una)</small></legend>
+              <label class="scelta"><input type="checkbox" name="st-induzione" />Piano a induzione o forno elettrico</label>
+              <label class="scelta"><input type="checkbox" name="st-scaldabagno" />Scaldabagno elettrico per l'acqua calda</label>
+              <label class="scelta"><input type="checkbox" name="st-condizionatore" />Condizionatore d'estate</label>
+              <label class="scelta"><input type="checkbox" name="st-pompaDiCalore" />Riscaldamento con pompa di calore o stufe elettriche</label>
+              <label class="scelta"><input type="checkbox" name="st-autoElettrica" />Auto elettrica ricaricata a casa</label>
+            </fieldset>
+            <fieldset data-solo="gas">
+              <legend>Per cosa usi il gas?</legend>
+              <label class="scelta"><input type="checkbox" name="st-cucina" checked />Cucina</label>
+              <label class="scelta"><input type="checkbox" name="st-acquaCalda" checked />Acqua calda</label>
+              <label class="scelta"><input type="checkbox" name="st-riscaldamento" checked />Riscaldamento autonomo</label>
+            </fieldset>
+            <label class="campo" data-solo="gas" id="campo-mq">Metri quadri da riscaldare
+              <input type="text" inputmode="numeric" name="st-mq" value="80" autocomplete="off" />
+              <small>La zona climatica la prendiamo dal comune.</small>
+            </label>
+            <div class="stima-risultato">
+              <span>Stima: <strong id="stima-valore">—</strong></span>
+              <button type="button" class="pe-btn-secondary" id="usa-stima">Usa questa stima</button>
+            </div>
+            <small>È una stima indicativa: se trovi il consumo in bolletta, usa quello.</small>
+          </div>
+        </details>
+        <label class="campo" for="kw" data-solo="luce">Potenza impegnata (kW) <small>3 kW è la più comune; la trovi in bolletta</small>
           <input type="text" inputmode="decimal" id="kw" name="kw" autocomplete="off" />
         </label>
-        <label class="campo" for="comune">Comune della fornitura
-          <input type="text" id="comune" name="comune" list="elenco-comuni" autocomplete="off" placeholder="Es. Quarrata (PT)" />
-          <small>Serve a includere le offerte locali. Senza comune vedi solo quelle nazionali.</small>
+        <label class="campo" for="comune"><span>Comune della fornitura <em class="obbl">obbligatorio</em></span>
+          <input type="text" id="comune" name="comune" list="elenco-comuni" autocomplete="off" placeholder="Es. Quarrata (PT)" aria-describedby="err-comune" />
+          <small>Serve per le offerte disponibili nella tua zona e, per il gas, per tasse e clima.</small>
+          <small class="errore-campo" id="err-comune" hidden></small>
         </label>
         <datalist id="elenco-comuni"></datalist>
-        <label class="scelta" for="res" data-solo="luce"><input type="checkbox" id="res" name="res" />Residente nell'abitazione</label>
+        <label class="scelta" for="res" data-solo="luce"><input type="checkbox" id="res" name="res" checked /><span>Residente nell'abitazione<small style="display:block;color:var(--ink-muted);font-size:13px">Togli la spunta se è una seconda casa</small></span></label>
         <label class="campo" for="zona" data-solo="gas">Zona climatica
           <select id="zona" name="zona">
             <option value="B">B · molto calda</option><option value="C">C · calda</option><option value="D">D · temperata</option><option value="E">E · fredda</option><option value="F">F · molto fredda</option>
           </select>
           <small>Proposta in base alla regione: cambiala se la conosci.</small>
         </label>
-        <label class="campo" for="cod">Codice della tua offerta (facoltativo)
+        <p class="sottotitolo-modulo">Per avere anche il voto della tua offerta <small>(facoltativo)</small></p>
+        <label class="campo" for="cod">Codice della tua offerta
           <input type="text" id="cod" name="cod" autocomplete="off" spellcheck="false" style="font-size:14px" />
           <small>Nel riquadro "Box dell'offerta" della bolletta.</small>
         </label>
         <label class="campo" for="spesa">Quanto spendi all'anno, in euro (facoltativo)
           <input type="text" inputmode="numeric" id="spesa" name="spesa" autocomplete="off" />
         </label>
-        <button type="submit" class="pe-btn" style="height:48px;font-size:16px">Ricalcola</button>
+        <button type="submit" class="pe-btn" style="height:48px;font-size:16px">Vedi le offerte</button>
       </form>
 
       <section class="riquadro" id="caricatore" style="border-style:dashed;position:relative">

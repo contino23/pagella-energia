@@ -276,3 +276,33 @@ img { max-width: 100%; }
 .piede-testo { display: flex; flex-direction: column; gap: 6px; }
 .piede-testo a { color: var(--ink); font-weight: 600; }
 @media (max-width: 560px) { .testata .solo-largo { display: none; } }
+
+/* ---------- Modulo dati: campi obbligatori e stima del consumo ---------- */
+.obbl { font-style: normal; font-size: 12px; font-weight: 700; color: var(--ink-muted); margin-left: 4px; }
+.errore-campo { color: var(--warn) !important; font-weight: 700; }
+input[aria-invalid="true"] { border-color: var(--warn) !important; }
+.sottotitolo-modulo { margin: 6px 0 -4px; padding-top: 12px; border-top: 1px solid var(--line); font-weight: 700; font-size: 15px; }
+.sottotitolo-modulo small { font-weight: 500; color: var(--ink-muted); }
+.stima { border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface-muted); margin-top: -6px; }
+.stima summary { cursor: pointer; padding: 12px 14px; font-weight: 700; font-size: 15px; list-style: none; }
+.stima summary::-webkit-details-marker { display: none; }
+.stima summary::before { content: "▸ "; }
+.stima[open] summary::before { content: "▾ "; }
+.stima-corpo { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 14px; }
+.stima fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.stima legend { font-weight: 700; font-size: 14.5px; margin-bottom: 8px; padding: 0; }
+.stima legend small { font-weight: 500; color: var(--ink-muted); }
+.stima .scelta { font-size: 14.5px; }
+.pillole { display: flex; flex-wrap: wrap; gap: 8px; }
+.pillole label { cursor: pointer; }
+.pillole span { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; height: 40px; padding: 0 12px; border-radius: 999px; border: 1.5px solid var(--line-strong); background: var(--surface); font-weight: 700; font-size: 15px; }
+.pillole input:checked + span { background: var(--ink); border-color: var(--ink); color: var(--on-ink); }
+.pillole input:focus-visible + span { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.stima-risultato { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); font-size: 15px; }
+.stima-risultato strong { font-size: 19px; font-variant-numeric: tabular-nums; }
+.stima-risultato .pe-btn-secondary { height: 40px; font-size: 14.5px; padding: 0 14px; }
+.incompleto { padding: 28px 24px; border: 1.5px dashed var(--line-strong); border-radius: var(--radius-lg); display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.incompleto h2 { margin: 0; font-size: 22px; }
+.incompleto p { margin: 0; color: var(--ink-muted); font-size: 16px; line-height: 1.5; }
+/* "hidden" vince sempre sugli stili dei componenti (campi solo luce/gas, risparmio vuoto, pulsanti). */
+[hidden] { display: none !important; }

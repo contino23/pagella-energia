@@ -75,6 +75,23 @@ Il voto della tua offerta si calcola così:
 La spesa dell'ultimo anno scritta in bolletta può essere diversa dalla nostra stima: la prima
 dipende dai prezzi passati, la seconda dai prezzi di oggi, uguali per tutte le offerte.
 
+## Se non conosci il consumo annuo
+
+Per confrontare le offerte servono almeno il **consumo annuo** e il **comune**. Se non hai la
+bolletta sotto mano, puoi stimare il consumo con poche domande. La stima è indicativa: se trovi
+il consumo in bolletta, usa quello.
+
+- **Luce:** si parte dal numero di persone in casa (1.400 kWh per una persona, 2.000 per due,
+  2.500 per tre, 2.900 per quattro, 3.300 per cinque o più), poi si aggiunge qualcosa per ogni
+  grande consumo elettrico: piano a induzione o forno elettrico +450, scaldabagno elettrico +900,
+  condizionatore +350, riscaldamento con pompa di calore o stufe elettriche +2.500,
+  auto elettrica ricaricata a casa +2.000.
+- **Gas:** cucina (135-230 Smc l'anno secondo le persone), acqua calda (310-510 Smc) e
+  riscaldamento autonomo, che dipende dai metri quadri e dalla zona climatica del comune
+  (da 4 Smc al metro quadro in zona A a 20 in zona F).
+
+Se non lo cambi, residente è impostato su "sì" e la potenza su 3 kW, il valore più comune.
+
 ## Il voto
 
 Voto da 0 a 10 per ogni voce, voto complessivo pesato:
@@ -94,3 +111,4 @@ Prezzo fisso e variabile non sono premiati né penalizzati in sé: è una scelta
 - 4/11/2026: il voto prezzo non è più la posizione in classifica (dava 9 e 10 a centinaia di offerte quasi uguali) ma lo scarto in euro dalla più economica, con la sufficienza a +10%.
 - 4/11/2026: se l'offerta della bolletta non è più in vendita, la ricostruiamo dai prezzi della "spesa per la vendita" stampati in bolletta (per le variabili: prezzo pagato meno l'indice dei mesi fatturati = spread) e la valutiamo come le altre. Se mancano anche quelli, diamo il voto sul solo prezzo partendo dalla spesa annua.
 - 5/11/2026: nelle schede, sotto il prezzo di listino, il prezzo con gli sconti sul prezzo dell'energia (verde se vale per tutti, blu se serve una condizione come la domiciliazione). Gli sconti limitati a una fascia oraria (F1, F2 o F3) ora valgono solo sui consumi di quella fascia: prima uno sconto ripetuto per le tre fasce veniva contato tre volte.
+- 9/11/2026: consumo annuo e comune sono obbligatori per vedere le offerte; chi non conosce il consumo può stimarlo con poche domande (persone in casa, elettrodomestici, metri quadri per il gas).

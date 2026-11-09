@@ -55,7 +55,7 @@ export default function Lettura() {
     const c = d.commodity ?? "luce";
     impostaProfilo({
       c,
-      cons: d.consumoAnnuo ?? (c === "gas" ? 1400 : 2700),
+      cons: d.consumoAnnuo ?? 0,
       kw: d.potenzaKw ?? 3,
       res: d.residente ?? true,
       zona: (comune && dati ? zonaPerComune(dati, comune.codice) : undefined) ?? "D",
@@ -72,7 +72,8 @@ export default function Lettura() {
       },
       daBolletta: true,
     });
-    router.replace("/risultati");
+    // Se in bolletta mancano consumo o comune, li chiediamo prima di mostrare le offerte.
+    router.replace(d.consumoAnnuo && comune ? "/risultati" : "/dati");
   }
 
   if (errore) {
