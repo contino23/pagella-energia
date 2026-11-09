@@ -10,9 +10,9 @@ import { numero } from "../lib/formato";
 import { useStato } from "../lib/stato";
 import { C, F, R } from "../lib/tema";
 
-type Passo = "fornitura" | "comune" | "sai" | "persone" | "usi" | "stima" | "dettagli" | "voto";
-const GRUPPO: Record<Passo, number> = { fornitura: 1, comune: 2, sai: 3, persone: 3, usi: 3, stima: 3, dettagli: 4, voto: 5 };
-const NOMI = ["Fornitura", "Comune", "Consumo", "Dettagli", "Il tuo voto"];
+type Passo = "fornitura" | "comune" | "sai" | "persone" | "usi" | "stima" | "dettagli";
+const GRUPPO: Record<Passo, number> = { fornitura: 1, comune: 2, sai: 3, persone: 3, usi: 3, stima: 3, dettagli: 4 };
+const NOMI = ["Fornitura", "Comune", "Consumo", "Dettagli"];
 const USI_LUCE = [
   ["induzione", "Piano a induzione o forno elettrico", "Si cucina a corrente"],
   ["scaldabagno", "Scaldabagno elettrico", "L'acqua calda la fa la corrente, non il gas"],
@@ -48,6 +48,7 @@ export default function Guidato() {
   const [zona, setZona] = useState<Zona>(profilo.zona);
   const [spesa, setSpesa] = useState(profilo.spesa ? String(profilo.spesa) : "");
   const [cod, setCod] = useState(profilo.cod ?? "");
+  const [facoltativo, setFacoltativo] = useState(!!(profilo.spesa || profilo.cod));
   const [errore, setErrore] = useState<string | null>(null);
   // Si parte dalla prima cosa che manca (per esempio dopo una bolletta letta a metà).
   const [storia, setStoria] = useState<Passo[]>(() => [!profilo.daBolletta ? "fornitura" : !profilo.comune ? "comune" : !(profilo.cons > 0) ? "sai" : "dettagli"]);
@@ -78,7 +79,7 @@ export default function Guidato() {
   useEffect(() => { scroll.current?.scrollTo({ y: 0, animated: false }); }, [passo]);
 
   function percorso(conSai = sai): Passo[] {
-    return ["fornitura", "comune", "sai", ...(conSai === "no" ? (["persone", "usi", "stima"] as Passo[]) : []), "dettagli", "voto"];
+    return ["fornitura", "comune", "sai", ...(conSai === "no" ? (["persone", "usi", "stima"] as Passo[]) : []), "dettagli"];
   }
 
   function avanti(da: Passo = passo, conSai = sai) {
@@ -86,7 +87,7 @@ export default function Guidato() {
     if (da === "sai" && conSai === "si" && !(num(cons) > 0)) return setErrore(`Scrivi il consumo annuo in ${u}, oppure scegli "No, aiutami a stimarlo".`);
     if (da === "stima" && !(num(consStima) > 0)) return setErrore(`Scrivi un consumo in ${u}.`);
     setErrore(null);
-    if (da === "voto") return fine();
+    if (da === "dettagli") return fine();
     const p = percorso(conSai);
     const prossimo = p[p.indexOf(da) + 1]!;
     if (prossimo === "stima") setConsStima(String(stima));
@@ -256,18 +257,22 @@ export default function Guidato() {
                   <Tenue style={{ fontSize: 14 }}>L'abbiamo proposta in base al tuo comune: cambiala solo se la conosci.</Tenue>
                 </>
               )}
-            </>
-          ) : null}
-
-          {passo === "voto" ? (
-            <>
-              <Text style={st.h1}>Vuoi anche il voto della tua offerta attuale?</Text>
-              <Tenue style={st.aiuto}>Facoltativo. Senza questi dati ti mostriamo comunque le offerte migliori.</Tenue>
-              <Text style={st.etichetta}>Quanto spendi all'anno, più o meno?</Text>
-              {campoUnita(spesa, setSpesa, "€")}
-              <Text style={[st.etichetta, { marginTop: 8 }]}>Codice della tua offerta <Text style={{ fontFamily: F.regular, color: C.inkMuted }}>(se ce l'hai sotto mano)</Text></Text>
-              <TextInput style={st.input} value={cod} onChangeText={setCod} autoCapitalize="characters" autoCorrect={false} />
-              <Tenue style={{ fontSize: 14 }}>Lo trovi in bolletta nel riquadro "Box dell'offerta". Con il codice il voto è più preciso.</Tenue>
+              <View style={st.facoltativo}>
+                <Pressable onPress={() => setFacoltativo(!facoltativo)} accessibilityRole="button" accessibilityState={{ expanded: facoltativo }} style={st.facoltativoTesta}>
+                  <View style={st.piu}><Text style={st.piuTesto}>{facoltativo ? "−" : "+"}</Text></View>
+                  <Text style={[st.etichetta, { flex: 1 }]}>Vuoi anche il voto della tua offerta attuale? <Text style={st.facTag}>FACOLTATIVO</Text></Text>
+                </Pressable>
+                {facoltativo ? (
+                  <View style={{ gap: 10, paddingHorizontal: 16, paddingBottom: 16 }}>
+                    <Tenue style={{ fontSize: 14 }}>Se lo salti, ti mostriamo comunque le offerte migliori.</Tenue>
+                    <Text style={st.etichetta}>Quanto spendi all'anno, più o meno?</Text>
+                    {campoUnita(spesa, setSpesa, "€")}
+                    <Text style={[st.etichetta, { marginTop: 4 }]}>Codice della tua offerta <Text style={{ fontFamily: F.regular, color: C.inkMuted }}>(se ce l'hai sotto mano)</Text></Text>
+                    <TextInput style={st.input} value={cod} onChangeText={setCod} autoCapitalize="characters" autoCorrect={false} />
+                    <Tenue style={{ fontSize: 14 }}>Lo trovi in bolletta nel riquadro "Box dell'offerta". Con il codice il voto è più preciso.</Tenue>
+                  </View>
+                ) : null}
+              </View>
             </>
           ) : null}
 
@@ -276,7 +281,7 @@ export default function Guidato() {
         <View style={st.azioni}>
           {storia.length > 1 ? <Pressable onPress={indietro} style={st.indietro} accessibilityRole="button"><Text style={st.indietroTesto}>← Indietro</Text></Pressable> : null}
           {!nascondiAvanti ? (
-            <Pulsante titolo={passo === "voto" ? "Vedi le offerte" : passo === "stima" ? "Va bene, avanti" : "Avanti"} onPress={() => avanti()} stile={{ flex: 1 }} />
+            <Pulsante titolo={passo === "dettagli" ? "Vedi le offerte" : passo === "stima" ? "Va bene, avanti" : "Avanti"} onPress={() => avanti()} stile={{ flex: 1 }} />
           ) : null}
         </View>
       </KeyboardAvoidingView>
@@ -311,6 +316,11 @@ const st = StyleSheet.create({
   elenco: { borderWidth: 1.5, borderColor: C.line, borderRadius: 12, overflow: "hidden" },
   suggerimento: { minHeight: 52, justifyContent: "center", paddingHorizontal: 16 },
   suggerimentoTesto: { fontFamily: F.semibold, fontSize: 17, color: C.ink },
+  facoltativo: { marginTop: 10, borderWidth: 1.5, borderColor: C.line, borderRadius: 14, backgroundColor: C.surfaceMuted },
+  facoltativoTesta: { flexDirection: "row", alignItems: "center", gap: 10, padding: 16, minHeight: 56 },
+  piu: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: C.lineStrong, backgroundColor: C.surface, alignItems: "center", justifyContent: "center" },
+  piuTesto: { fontFamily: F.bold, fontSize: 16, color: C.ink, lineHeight: 18 },
+  facTag: { fontFamily: F.bold, fontSize: 11, color: C.inkMuted, letterSpacing: 0.6 },
   errore: { fontFamily: F.bold, fontSize: 15, color: C.warn },
   azioni: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 20, paddingVertical: 12, borderTopWidth: 1, borderTopColor: C.line, backgroundColor: C.surface },
   indietro: { minHeight: 48, justifyContent: "center", paddingHorizontal: 4 },

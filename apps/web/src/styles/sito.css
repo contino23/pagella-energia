@@ -374,3 +374,10 @@ input[aria-invalid="true"] { border-color: var(--warn) !important; }
   .guida-azioni .pe-btn { flex: 1; }
 }
 .link-stima { margin-top: -4px; font-size: 14.5px; font-weight: 700; color: var(--ink); }
+.facoltativo { margin-top: 10px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--surface-muted); }
+.facoltativo summary { cursor: pointer; list-style: none; padding: 16px 18px; font-weight: 700; font-size: 16px; line-height: 1.35; display: grid; grid-template-columns: 26px 1fr; column-gap: 12px; row-gap: 2px; align-items: center; }
+.facoltativo summary::-webkit-details-marker { display: none; }
+.facoltativo summary::before { content: "+"; display: inline-flex; width: 24px; height: 24px; align-items: center; justify-content: center; border-radius: 999px; background: var(--surface); border: 1.5px solid var(--line-strong); font-size: 16px; }
+.facoltativo[open] summary::before { content: "−"; }
+.facoltativo summary small { grid-column: 2; font-size: 12px; font-weight: 700; color: var(--ink-muted); text-transform: uppercase; letter-spacing: .06em; }
+.facoltativo-corpo { padding: 0 18px 18px; display: flex; flex-direction: column; gap: 10px; }

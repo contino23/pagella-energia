@@ -6,8 +6,8 @@ import { stimaConsumoGas, stimaConsumoLuce, ZONA_CLIMATICA_TIPICA, type Persone 
 import { caricaComuni, URL_RISULTATI, type Comune } from "./dati.js";
 import { h, numero } from "./formato.js";
 
-type Passo = "fornitura" | "comune" | "sai" | "persone" | "usi" | "stima" | "dettagli" | "voto";
-const GRUPPI = ["Fornitura", "Comune", "Consumo", "Dettagli", "Il tuo voto"];
+type Passo = "fornitura" | "comune" | "sai" | "persone" | "usi" | "stima" | "dettagli";
+const GRUPPI = ["Fornitura", "Comune", "Consumo", "Dettagli"];
 const CHIAVI_BOLLETTA = ["nome", "tp", "pv", "qf", "pd", "pa", "pen", "sa", "letti", "cod"];
 
 const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
@@ -30,7 +30,7 @@ const unita = () => (commodity() === "gas" ? "Smc" : "kWh");
 function percorso(): Passo[] {
   const p: Passo[] = ["fornitura", "comune", "sai"];
   if (radio("sai") === "no") p.push("persone", "usi", "stima");
-  p.push("dettagli", "voto");
+  p.push("dettagli");
   return p;
 }
 
@@ -47,7 +47,7 @@ function mostra(passo: Passo, focus = true) {
   $("#passo-n").textContent = `Passo ${gruppo} di ${GRUPPI.length} · ${GRUPPI[gruppo - 1]}`;
   $("#indietro").style.visibility = storia.length > 1 ? "visible" : "hidden";
   const avanti = $<HTMLButtonElement>("#avanti");
-  avanti.textContent = passo === "voto" ? "Vedi le offerte" : passo === "stima" ? "Va bene, avanti" : "Avanti";
+  avanti.textContent = passo === "dettagli" ? "Vedi le offerte" : passo === "stima" ? "Va bene, avanti" : "Avanti";
   // Nelle domande a scelta singola si va avanti toccando la risposta.
   avanti.hidden = passo === "fornitura" || passo === "persone" || (passo === "sai" && !radio("sai"));
   window.scrollTo({ top: 0 });
@@ -82,7 +82,7 @@ function valida(passo: Passo): boolean {
 function avanti() {
   const ora = storia[storia.length - 1]!;
   if (!valida(ora)) return;
-  if (ora === "voto") return fine();
+  if (ora === "dettagli") return fine();
   const p = percorso();
   vai(p[p.indexOf(ora) + 1]!);
 }
@@ -165,6 +165,7 @@ async function avvia() {
   if (cons > 0) { form.querySelector<HTMLInputElement>(`input[name="sai"][value="si"]`)!.checked = true; el("cons").value = String(cons); $("#campo-consumo").hidden = false; }
   if (Number(iniziali.get("spesa")) > 0) el("spesa").value = iniziali.get("spesa")!;
   if (iniziali.get("cod")) el("cod").value = iniziali.get("cod")!;
+  if (el("spesa").value || el("cod").value) ($("#facoltativo") as HTMLDetailsElement).open = true;
 
   comuni = await caricaComuni();
   const com = comuni.find((x) => x.codice === iniziali.get("comune"));

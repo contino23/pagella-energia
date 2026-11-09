@@ -115,17 +115,19 @@ const ZONE = [["B", "molto calda"], ["C", "calda"], ["D", "temperata"], ["E", "f
           </div>
           <small id="zona-nota">L'abbiamo proposta in base al tuo comune.</small>
         </fieldset>
+        <details class="facoltativo" id="facoltativo">
+          <summary>Vuoi anche il voto della tua offerta attuale? <small>facoltativo</small></summary>
+          <div class="facoltativo-corpo">
+            <p class="guida-nota">Se lo salti, ti mostriamo comunque le offerte migliori.</p>
+            <label class="guida-etichetta" for="spesa">Quanto spendi all'anno, più o meno?</label>
+            <div class="guida-input-unita"><input class="guida-input" type="text" inputmode="numeric" id="spesa" /><span>€</span></div>
+            <label class="guida-etichetta" for="cod">Codice della tua offerta <small>(se ce l'hai sotto mano)</small></label>
+            <input class="guida-input" type="text" id="cod" spellcheck="false" autocapitalize="characters" style="font-size:16px" />
+            <p class="guida-nota">Lo trovi in bolletta nel riquadro "Box dell'offerta". Con il codice il voto è più preciso.</p>
+          </div>
+        </details>
       </section>
 
-      <section class="passo" data-passo="voto" data-gruppo="5" hidden>
-        <h1>Vuoi anche il voto della tua offerta attuale?</h1>
-        <p class="guida-aiuto">Facoltativo. Senza questi dati ti mostriamo comunque le offerte migliori.</p>
-        <label class="guida-etichetta" for="spesa">Quanto spendi all'anno, più o meno?</label>
-        <div class="guida-input-unita"><input class="guida-input" type="text" inputmode="numeric" id="spesa" /><span>€</span></div>
-        <label class="guida-etichetta" for="cod">Codice della tua offerta <small>(se ce l'hai sotto mano)</small></label>
-        <input class="guida-input" type="text" id="cod" spellcheck="false" autocapitalize="characters" style="font-size:16px" />
-        <p class="guida-nota">Lo trovi in bolletta nel riquadro "Box dell'offerta". Con il codice il voto è più preciso.</p>
-      </section>
 
       <div class="guida-azioni">
         <button type="button" class="guida-indietro" id="indietro">← Indietro</button>
