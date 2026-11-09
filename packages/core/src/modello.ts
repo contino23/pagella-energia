@@ -111,9 +111,8 @@ export interface Offerta {
     haPenaleRecesso: boolean;
     /** Mesi di vincolo della penale e importo, se ricavabili dai testi (vedi penale.ts). */
     penaleMesi?: number;
-    penaleImporto?: number;
+    penaleCosto?: string;
     penaleFinoAl?: string;
-    penaleMassimo?: boolean;
     /** Per quanto resta bloccato un prezzo fisso, se l'offerta non ha una durata ma lo scrive nella descrizione. */
     bloccoMesi?: number;
     bloccoFinoAl?: string;

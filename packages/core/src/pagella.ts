@@ -88,7 +88,7 @@ export function votoVincoli(o: Offerta): VocePagella {
   const penale = penaleRecesso(o);
   if (penale) {
     v -= 4;
-    motivi.push(`Penale ${testoPenale(penale)}`);
+    motivi.push(testoPenale(penale));
   }
   if (RE_DEPOSITO.test(o.garanzie) && !RE_NESSUN_DEPOSITO.test(o.garanzie)) {
     v -= 1;

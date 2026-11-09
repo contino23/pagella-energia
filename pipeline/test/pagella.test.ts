@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { creaPagella, penaleRecesso, stimaSpesaLuce, testoPenale, votoPrezzo, votoVincoli, type Offerta } from "@pagella/core";
+import { creaPagella, avvisoPenale, costoNelTesto, penaleRecesso, stimaSpesaLuce, votoPrezzo, votoVincoli, type Offerta } from "@pagella/core";
 import { leggiOfferteXml } from "../src/leggi-offerte.js";
 import { leggiParametriCsv } from "../src/leggi-parametri.js";
 
@@ -81,10 +81,18 @@ describe("penale di uscita", () => {
     ...extra,
   }) as unknown as Offerta;
 
-  it("legge i mesi scritti nella condizione", () => {
+  it("scrive il costo solo quando il venditore lo indica", () => {
     const p = penaleRecesso(base("In caso di recesso durante i primi due anni (24 mesi) di fornitura a prezzo fisso ... pari a 138€ nel primo mese di fornitura, 132€ nel secondo"))!;
-    expect(p.mesi).toBe(24);
-    expect(testoPenale(p)).toBe("se cambi fornitore nei primi 24 mesi (2 anni) dall'attivazione: fino a 138 €");
+    expect(avvisoPenale(p)).toEqual({ titolo: "Penale di uscita", testo: "se cambi fornitore nei primi 24 mesi (2 anni): fino a 138 €, che cala ogni mese" });
+    const vaga = penaleRecesso(base("Oneri di Recesso Anticipato", { descrizione: "Prezzo fisso bloccato per dieci anni." }))!;
+    expect(avvisoPenale(vaga).titolo).toBe("Possibile penale di uscita:");
+  });
+  it("riconosce i modi più comuni di scrivere il costo", () => {
+    expect(costoNelTesto("non potrà essere superiore al valore massimo di 300 euro per il primo anno di fornitura, 200 euro per il secondo anno di fornitura e 100 euro per il terzo anno")).toBe("fino a 300 € il 1° anno, 200 € il 2° anno, 100 € il 3° anno");
+    expect(costoNelTesto("importo massimo = 8 € × n° mesi, dove n° mesi = numero di mesi residui. L'importo indicato è da intendersi iva esclusa.")).toBe("fino a 8 € per ogni mese che manca alla scadenza + IVA");
+    expect(costoNelTesto("fino a un massimo di 90,00€ IVA esclusa")).toBe("fino a 90 € + IVA");
+    expect(costoNelTesto("penale pari al 100% del valore annuale della CCV pari ad € 240,00 ... pari al 50% del valore annuale della CCV pari ad € 120,00")).toBe("fino a 240 €");
+    expect(costoNelTesto("Oneri per il recesso anticipato.")).toBeUndefined();
   });
   it("preferisce la durata dell'offerta agli scaglioni del testo", () => {
     expect(penaleRecesso(base("massimo di 300 euro per il primo anno di fornitura, 200 euro per il secondo anno", { durataMesi: 36 }))!.mesi).toBe(36);
@@ -99,7 +107,7 @@ describe("penale di uscita", () => {
   it("riconosce chi dichiara di non avere penali", () => {
     expect(penaleRecesso(base("Octopus Energy non applica alcun onere di recesso, quindi anche questa offerta non ne prevede."))).toBeNull();
   });
-  it("non scambia un importo al mese per la penale", () => {
-    expect(penaleRecesso(base("pari a 1,99 € (uno/99 euro) per ogni mese residuo", { durataMesi: 26 }))!.importo).toBeUndefined();
+  it("riconosce un importo per ogni mese che manca", () => {
+    expect(penaleRecesso(base("pari a 1,99 € (uno/99 euro) per ogni mese residuo", { durataMesi: 26 }))!.costo).toBe("fino a 1,99 € per ogni mese che manca alla scadenza");
   });
 });

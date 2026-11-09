@@ -1,17 +1,16 @@
 /**
- * Quanto dura il vincolo della penale di uscita e, quando è scritto, quanto costa.
- * Il Portale Offerte dice solo SE c'è una penale: la durata la ricaviamo, in quest'ordine,
- * dal testo della condizione, dalla durata dell'offerta e dalla sua descrizione.
+ * Penale di uscita (oneri di recesso anticipato).
+ * Il Portale Offerte dice solo SE c'è una penale. Mostriamo quanto costa solo quando il venditore
+ * lo scrive nero su bianco nella condizione; altrimenti avvisiamo che potrebbe esserci e di leggere
+ * il contratto, senza indovinare durata o importo.
  */
 import type { Offerta } from "./modello.js";
 
 export interface Penale {
   /** Mesi dall'attivazione entro cui cambiare costa una penale. */
   mesi?: number;
-  /** Importo fisso in euro, solo quando il venditore lo scrive in chiaro. */
-  importo?: number;
-  /** L'importo è un massimo (cala nel tempo o dipende dalla perdita del venditore). */
-  massimo?: boolean;
+  /** Quanto costa, a parole ("fino a 300 € il 1° anno, 200 € il 2°"), solo se scritto in chiaro nella condizione. */
+  costo?: string;
   /** Data di fine del vincolo, quando il venditore indica una data invece dei mesi (gg/mm/aaaa). */
   finoAl?: string;
 }
@@ -34,13 +33,42 @@ export function mesiNelTesto(t: string): number | undefined {
   return undefined;
 }
 
-export function importoNelTesto(t: string): { importo: number; massimo: boolean } | undefined {
-  if (/per ogni mese|per ciascun mese|\/mese|per kwh|per smc/i.test(t)) return undefined;
-  const m = /(pari a|massimo di|fino a)\s*(?:un massimo di\s*)?(?:euro\s*|€\s*)?(\d{1,4}(?:[.,]\d{1,2})?)\s*(?:€|euro)/i.exec(t);
-  if (!m) return undefined;
-  const importo = Number(m[2]!.replace(",", "."));
-  if (!(importo > 0)) return undefined;
-  return { importo, massimo: /massim|fino a|nel primo mese|inferiore/i.test(t) };
+const ORDINALI: Record<string, number> = { primo: 1, secondo: 2, terzo: 3, quarto: 4, quinto: 5 };
+const euro = (x: string) => `${Number(x.replace(/\.(?=\d{3})/g, "").replace(",", ".")).toLocaleString("it-IT", { maximumFractionDigits: 2 })} €`;
+const NUM = "(\\d{1,4}(?:[.,]\\d{1,2})?)";
+
+/** Il costo della penale come lo scrive il venditore, in una frase breve. undefined se non è chiaro. */
+export function costoNelTesto(testo: string): string | undefined {
+  const t = testo.replace(/\s+/g, " ");
+  const iva = /iva esclusa|oltre iva|\+ ?iva/i.test(t) ? " + IVA" : "";
+  // 300 euro per il primo anno, 200 euro per il secondo anno...
+  const anni = [...t.matchAll(new RegExp(`${NUM}\\s*(?:€|euro)[^.;€]{0,40}?\\b(primo|secondo|terzo|quarto|quinto) anno`, "gi"))];
+  if (anni.length >= 2) return `fino a ${anni.map((m) => `${euro(m[1]!)} il ${ORDINALI[m[2]!.toLowerCase()]}° anno`).join(", ")}${iva}`;
+  // 3 € x kW di potenza x n° mesi residui; 0,12 €/kW * potenza * n° giorni
+  let m = new RegExp(`${NUM}\\s*(?:€|euro)\\s*(?:\\/|x|×|\\*|per)\\s*kW`, "i").exec(t);
+  if (m) {
+    const unita = /giorn/i.test(t) ? "giorno" : /mes/i.test(t) ? "mese" : null;
+    if (unita) return `fino a ${euro(m[1]!)} per ogni kW di potenza e per ogni ${unita} che manca alla scadenza${iva}`;
+  }
+  // 1,99 € per ogni mese residuo; 8 € × n° mesi; 12 € per nr. di mesi residui; 20 euro per mese residuo
+  m = new RegExp(`${NUM}\\s*(?:€|euro)(?:\\s*\\([^)]*\\))?\\s*(?:per ogni|per ciascun|per|x|×|\\*)\\s*(?:(?:il\\s*)?(?:n°|nr\\.?|numero)\\s*)?(?:di\\s*|dei\\s*)?mes[ei]`, "i").exec(t);
+  if (m) return `fino a ${euro(m[1]!)} per ogni mese che manca alla scadenza${iva}`;
+  // 138€ nel primo mese di fornitura, 132€ nel secondo...
+  m = new RegExp(`${NUM}\\s*(?:€|euro)\\s*nel primo mese`, "i").exec(t);
+  if (m) return `fino a ${euro(m[1]!)}, che cala ogni mese${iva}`;
+  // importo massimo di 200 €, fino a un massimo di 90 €, pari a 30 €, pari ad € 240,00
+  const importi = [
+    ...t.matchAll(new RegExp(`(?:massim\\w*|fino a|pari ad?|non superiore a)[^.;€\\d]{0,40}?${NUM}\\s*(?:€|euro)`, "gi")),
+    ...t.matchAll(new RegExp(`(?:massim\\w*|fino a|pari ad?|non superiore a)[^.;€\\d]{0,40}?(?:€|euro)\\s*${NUM}`, "gi")),
+  ].filter((x) => !/per ogni|per ciascun|\/mese|al mese|\/kw|per kwh|per smc|%/i.test(t.slice(x.index!, x.index! + x[0].length + 12)))
+    .map((x) => Number(x[1]!.replace(/\.(?=\d{3})/g, "").replace(",", ".")))
+    .filter((x) => x >= 1);
+  if (importi.length) {
+    const max = Math.max(...importi);
+    const tetto = importi.length > 1 || /massim|fino a|non superiore|inferiore|non potrà superare/i.test(t);
+    return `${tetto ? "fino a " : ""}${euro(String(max).replace(".", ","))}${iva}`;
+  }
+  return undefined;
 }
 
 /** Durata scritta in modo esplicito: "nei primi 24 mesi", "durante il primo anno". */
@@ -59,26 +87,30 @@ export function penaleRecesso(o: Offerta): Penale | null {
   if (!o.derivati.haPenaleRecesso) return null;
   const d = o.derivati;
   if (d.penaleCalcolata)
-    return { ...(d.penaleMesi ? { mesi: d.penaleMesi } : {}), ...(d.penaleImporto ? { importo: d.penaleImporto } : {}), ...(d.penaleMassimo ? { massimo: true } : {}), ...(d.penaleFinoAl ? { finoAl: d.penaleFinoAl } : {}) };
+    return { ...(d.penaleMesi ? { mesi: d.penaleMesi } : {}), ...(d.penaleCosto ? { costo: d.penaleCosto } : {}), ...(d.penaleFinoAl ? { finoAl: d.penaleFinoAl } : {}) };
   const testi = o.condizioni.filter((c) => c.tipo === "ONERI_RECESSO_ANTICIPATO").map((c) => c.testo).join(" ").replace(/\s+/g, " ");
   if (RE_NESSUNA.test(testi)) return null;
   const durata = o.durataMesi && o.durataMesi !== 99 && o.durataMesi > 0 ? o.durataMesi : undefined;
   // La durata dell'offerta vale più del testo, dove spesso compaiono mesi e anni di esempi o scaglioni.
   const mesi = durata ?? mesiEspliciti(testi) ?? mesiBloccoNelTesto(o.descrizione) ?? mesiNelTesto(o.nome) ?? mesiNelTesto(testi) ?? mesiNelTesto(o.descrizione);
   const finoAl = mesi ? undefined : dataNelTesto(testi) ?? dataNelTesto(o.descrizione);
-  const imp = importoNelTesto(testi);
-  return { ...(mesi ? { mesi } : {}), ...(imp ? { importo: imp.importo, ...(imp.massimo ? { massimo: true } : {}) } : {}), ...(finoAl ? { finoAl } : {}) };
+  const costo = costoNelTesto(testi);
+  return { ...(mesi ? { mesi } : {}), ...(costo ? { costo } : {}), ...(finoAl ? { finoAl } : {}) };
 }
 
-/** Frase breve per l'avviso: "se cambi fornitore nei primi 36 mesi (3 anni)". */
-export function testoPenale(p: Penale): string {
+/** Avviso per la scheda: con il costo solo se il venditore lo scrive, altrimenti invito a leggere il contratto. */
+export function avvisoPenale(p: Penale): { titolo: string; testo: string } {
+  if (!p.costo) return { titolo: "Possibile penale di uscita:", testo: "potrebbero esserci oneri di recesso anticipato, leggi bene il contratto prima di firmare" };
   const quando = p.mesi
-    ? `se cambi fornitore nei primi ${testoMesi(p.mesi)} dall'attivazione`
-    : p.finoAl
-      ? `se cambi fornitore prima del ${p.finoAl}`
-      : "se cambi fornitore prima della scadenza (la durata non è indicata: verificala nel contratto)";
-  const euro = p.importo ? `${p.importo.toLocaleString("it-IT", { maximumFractionDigits: 2 })} €` : "";
-  return p.importo ? `${quando}: ${p.massimo ? "fino a " : ""}${euro}` : quando;
+    ? `se cambi fornitore nei primi ${testoMesi(p.mesi)}`
+    : p.finoAl ? `se cambi fornitore prima del ${p.finoAl}` : "se cambi fornitore prima della scadenza";
+  return { titolo: "Penale di uscita", testo: `${quando}: ${p.costo}` };
+}
+
+/** Frase per i motivi della pagella. */
+export function testoPenale(p: Penale): string {
+  const a = avvisoPenale(p);
+  return p.costo ? `Penale ${a.testo}` : "Possibile penale di uscita: leggi bene il contratto";
 }
 
 /** "36 mesi (3 anni)", "12 mesi", "10 anni". */
@@ -114,8 +146,7 @@ export function conPenaleCalcolata(o: Offerta): Offerta {
       ...o.derivati,
       haPenaleRecesso: p !== null,
       ...(p?.mesi ? { penaleMesi: p.mesi } : {}),
-      ...(p?.importo ? { penaleImporto: p.importo } : {}),
-      ...(p?.massimo ? { penaleMassimo: true } : {}),
+      ...(p?.costo ? { penaleCosto: p.costo } : {}),
       ...(p?.finoAl ? { penaleFinoAl: p.finoAl } : {}),
       ...(b.mesi ? { bloccoMesi: b.mesi } : {}),
       ...(b.finoAl ? { bloccoFinoAl: b.finoAl } : {}),
