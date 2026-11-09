@@ -64,7 +64,7 @@ export function penaleRecesso(o: Offerta): Penale | null {
   if (RE_NESSUNA.test(testi)) return null;
   const durata = o.durataMesi && o.durataMesi !== 99 && o.durataMesi > 0 ? o.durataMesi : undefined;
   // La durata dell'offerta vale più del testo, dove spesso compaiono mesi e anni di esempi o scaglioni.
-  const mesi = durata ?? mesiEspliciti(testi) ?? mesiNelTesto(o.descrizione) ?? mesiNelTesto(o.nome) ?? mesiNelTesto(testi);
+  const mesi = durata ?? mesiEspliciti(testi) ?? mesiBloccoNelTesto(o.descrizione) ?? mesiNelTesto(o.nome) ?? mesiNelTesto(testi) ?? mesiNelTesto(o.descrizione);
   const finoAl = mesi ? undefined : dataNelTesto(testi) ?? dataNelTesto(o.descrizione);
   const imp = importoNelTesto(testi);
   return { ...(mesi ? { mesi } : {}), ...(imp ? { importo: imp.importo, ...(imp.massimo ? { massimo: true } : {}) } : {}), ...(finoAl ? { finoAl } : {}) };
@@ -88,12 +88,18 @@ export function testoMesi(m: number): string {
   return `${m} mesi`;
 }
 
+/** Durata del blocco scritta nella descrizione: "bloccato per dieci anni", "fisso e invariabile per 36 mesi". */
+export function mesiBloccoNelTesto(t: string): number | undefined {
+  const m = /(?:bloccat\w*|bloccare|fiss[oa]|invariabil\w*|garantit\w*)\b[^.]{0,40}?\bper\s+[^.]{0,25}?(?:mes[ei]|ann[oi])/i.exec(t);
+  return m ? mesiNelTesto(m[0]) : undefined;
+}
+
 /** Per quanto resta bloccato il prezzo di un'offerta a prezzo fisso. */
 export function bloccoPrezzo(o: Offerta): { mesi?: number; finoAl?: string } {
   if (o.durataMesi && o.durataMesi !== 99 && o.durataMesi > 0) return { mesi: o.durataMesi };
   const d = o.derivati;
   if (d.penaleCalcolata) return { ...(d.bloccoMesi ? { mesi: d.bloccoMesi } : {}), ...(d.bloccoFinoAl ? { finoAl: d.bloccoFinoAl } : {}) };
-  const mesi = mesiNelTesto(o.descrizione) ?? mesiNelTesto(o.nome);
+  const mesi = mesiBloccoNelTesto(o.descrizione) ?? mesiNelTesto(o.nome);
   const finoAl = mesi ? undefined : dataNelTesto(o.descrizione);
   return { ...(mesi ? { mesi } : {}), ...(finoAl ? { finoAl } : {}) };
 }

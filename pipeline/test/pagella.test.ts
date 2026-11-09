@@ -93,6 +93,9 @@ describe("penale di uscita", () => {
     expect(penaleRecesso(base("Oneri di Recesso Anticipato", { descrizione: "Prezzo fisso bloccato per dieci anni." }))!.mesi).toBe(120);
     expect(penaleRecesso(base("anticipatamente rispetto alla durata", { descrizione: "prezzo fisso e invariabile fino al 31/12/2031, con energia" }))!.finoAl).toBe("31/12/2031");
   });
+  it("nella descrizione conta la durata del blocco, non altri mesi", () => {
+    expect(penaleRecesso(base("Per quest'offerta e' previsto un onere di recesso anticipato", { descrizione: "il prezzo che l'offerta NeN Dieci ti permette di bloccare per 10 anni. Dopo 12 mesi, ricalcoleremo la tua rata" }))!.mesi).toBe(120);
+  });
   it("riconosce chi dichiara di non avere penali", () => {
     expect(penaleRecesso(base("Octopus Energy non applica alcun onere di recesso, quindi anche questa offerta non ne prevede."))).toBeNull();
   });
