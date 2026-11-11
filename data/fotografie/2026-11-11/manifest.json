@@ -1,0 +1,48 @@
+{
+  "data": "2026-11-11",
+  "generataIl": "2026-11-11T08:20:29.173Z",
+  "versioneLettore": "0.1.0",
+  "fonte": "Portale Offerte (ARERA / Acquirente Unico) – sezione Open Data",
+  "licenza": "Dati open data del Portale Offerte, riuso libero con citazione della fonte \"Portale Offerte\"",
+  "file": [
+    {
+      "nome": "PO_Offerte_D_MLIBERO_20261111.xml",
+      "sha256": "7bb89b9cb7f7efa7b000e767efce4973a29643610fb08718b52d7ef46aa48e3f",
+      "byte": 150751
+    },
+    {
+      "nome": "PO_Offerte_E_MLIBERO_20261111.xml",
+      "sha256": "d3b9f5851ec720a7d24cf3dfed2e0a3d421e675045d50658773805e6c2256169",
+      "byte": 20507016
+    },
+    {
+      "nome": "PO_Offerte_G_MLIBERO_20261111.xml",
+      "sha256": "17df0231e0262cfd916884ad0d453594066beb5c905ebdd8631d635b4e000c10",
+      "byte": 14407591
+    },
+    {
+      "nome": "PO_Parametri_Mercato_Libero_E_20261111.csv",
+      "sha256": "801bb798d551656be3e7e9db45431d81fc0bb5df147dfb4f94b722e577e639d0",
+      "byte": 9912
+    },
+    {
+      "nome": "PO_Parametri_Mercato_Libero_G_20261111.csv",
+      "sha256": "961f3013002f5dd0a06432d2cd868255e2d423aeda6baa1239190c8af1c3c643",
+      "byte": 6643
+    }
+  ],
+  "conteggi": {
+    "offerte": 6300,
+    "venditori": 368,
+    "luce": 3546,
+    "gas": 2714,
+    "dual": 40,
+    "domestiche": 3499,
+    "fisse": 1059,
+    "variabili": 5238,
+    "conPenaleRecesso": 147,
+    "domesticheLuceFisseConPenale": 100,
+    "conCondizioniLimitanti": 1438,
+    "disponibiliOvunque": 5622
+  }
+}
