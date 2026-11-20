@@ -23,8 +23,16 @@ if ! g push --dry-run -q origin HEAD:main 2>/dev/null; then
   exit 1
 fi
 
-log "Dipendenze"
-npm ci --no-audit --no-fund --loglevel=error
+# Servono solo le dipendenze della pipeline (circa 80 MB), non quelle di sito e app (circa 800 MB).
+# E si reinstallano solo quando cambia package-lock.json: prima npm ci riscriveva tutto a ogni giro.
+IMPRONTA="$(sha256sum package-lock.json | cut -d' ' -f1)-pipeline"
+if [ "$(cat node_modules/.impronta 2>/dev/null)" = "$IMPRONTA" ]; then
+  log "Dipendenze invariate"
+else
+  log "Dipendenze"
+  npm ci -w pipeline --include-workspace-root=false --no-audit --no-fund --loglevel=error
+  echo "$IMPRONTA" > node_modules/.impronta
+fi
 
 log "Download dal Portale Offerte"
 OUT=$(npm run -s scarica)

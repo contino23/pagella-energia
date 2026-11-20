@@ -12,6 +12,7 @@
  * Uso: tsx src/scarica.ts [cartella-raw] [file-indici]
  * Scrive in cartella-raw/AAAA-MM-GG/ e stampa la data trovata (anche in GITHUB_OUTPUT come "data").
  */
+import { existsSync } from "node:fs";
 import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { leggiIndiciCsv } from "./leggi-indici.js";
@@ -84,8 +85,11 @@ async function principale() {
     process.exit(1);
   }
   const cartella = resolve(rawArg, scelta.data);
-  await mkdir(cartella, { recursive: true });
-  for (const f of scelta.file) {
+  // Se la fotografia di quel giorno c'è già, i file delle offerte non servono: non li riscarichiamo.
+  const giaFotografata = existsSync(resolve(rawArg, "..", "fotografie", scelta.data));
+  if (giaFotografata) console.log(`Fotografia del ${scelta.data} già presente: salto il download delle offerte`);
+  else await mkdir(cartella, { recursive: true });
+  for (const f of giaFotografata ? [] : scelta.file) {
     const b = await scaricaByte(f.url);
     if (b.length < 1000) throw new Error(`${f.nome}: file troppo piccolo (${b.length} byte)`);
     await writeFile(join(cartella, f.nome), b);
