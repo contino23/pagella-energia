@@ -1,0 +1,20 @@
+{
+  "data": "2026-11-27",
+  "offertePerFile": {
+    "PO_Offerte_D_MLIBERO_20261127.xml": 45,
+    "PO_Offerte_E_MLIBERO_20261127.xml": 3426,
+    "PO_Offerte_G_MLIBERO_20261127.xml": 2713
+  },
+  "anomaliePerTipo": {
+    "IDX_PREZZO_ENERGIA: offerta variabile senza indice": 1
+  },
+  "esempi": [
+    {
+      "codiceOfferta": "027850DSVML00XXMYZEUSXDUALXWEB10",
+      "campo": "IDX_PREZZO_ENERGIA",
+      "valore": "",
+      "messaggio": "offerta variabile senza indice"
+    }
+  ],
+  "avvisi": []
+}
